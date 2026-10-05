@@ -1,0 +1,103 @@
+{{define "content"}}
+<header class="page-header">
+  <h1>Todo</h1>
+  <p class="subtitle">{{.TotalOpen}} task terbuka</p>
+</header>
+
+<nav class="chip-row" aria-label="Filter project">
+  <a href="/todo" class="chip {{if eq .FilterID 0}}active{{end}}">{{.ProjectAll}}</a>
+  {{range .Projects}}
+  <a href="/todo?project={{.ID}}" class="chip {{if eq .ID $.FilterID}}active{{end}}">
+    <span class="chip-dot" style="background:{{.Color}}"></span>{{.Name}}
+  </a>
+  {{end}}
+</nav>
+
+{{if not .Sections}}
+<div class="empty">
+  {{template "icon-check" .}}
+  <p>Tidak ada task di filter ini.</p>
+</div>
+{{end}}
+
+{{range .Sections}}
+<details class="todo-section" {{if ne .Key "done"}}open{{end}}>
+  <summary>
+    <span class="section-chev">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
+    </span>
+    <span class="section-label section-label-{{.Key}}">{{.Label}}</span>
+    <span class="section-count">{{len .Tasks}}</span>
+  </summary>
+  {{template "todo-tasklist" .Tasks}}
+</details>
+{{end}}
+
+<button type="button" class="fab" aria-label="Tambah task" onclick="document.getElementById('quick-dialog').showModal()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+
+<dialog id="quick-dialog" class="quick-dialog">
+  <form method="post" action="/tasks" class="quick-dialog-form">
+    <input type="hidden" name="redirect" value="/todo{{if .FilterID}}?project={{.FilterID}}{{end}}">
+    <div class="quick-dialog-head">
+      <h2>Task baru</h2>
+      <button type="button" class="icon" aria-label="Tutup" onclick="document.getElementById('quick-dialog').close()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <textarea name="input" rows="3" placeholder="Ketik bebas... title, deadline, prioritas, project otomatis terdeteksi" required autofocus></textarea>
+    <p class="hint">Contoh: "besok jam 10 call client ERP Unirama urgent"</p>
+    <button type="submit">Tambah</button>
+  </form>
+</dialog>
+
+<script>
+  (function () {
+    var dlg = document.getElementById('quick-dialog');
+    if (!dlg) return;
+    dlg.addEventListener('click', function (e) {
+      var r = dlg.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) {
+        dlg.close();
+      }
+    });
+  })();
+</script>
+{{end}}
+
+{{define "todo-tasklist"}}
+<ul class="tasklist">
+  {{range .}}
+  <li class="task {{if eq .Status "done"}}done{{end}}">
+    <div class="task-check">
+      <form method="post" action="/tasks/{{.ID}}/status" class="inline">
+        <input type="hidden" name="status" value="{{if eq .Status "done"}}pending{{else}}done{{end}}">
+        <button type="submit" title="{{if eq .Status "done"}}Batalkan selesai{{else}}Tandai selesai{{end}}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </form>
+    </div>
+    <div class="task-main">
+      <a href="/tasks/{{.ID}}" class="task-title">{{.Title}}</a>
+      <div class="task-meta">
+        {{if .ProjectName}}<span class="project-badge"><span class="dot" style="background:{{.ProjectColor}}"></span>{{.ProjectName}}</span>{{end}}
+        <span class="dot p-{{.Priority}}"></span>
+        <span>{{.Priority}}</span>
+        {{if .Deadline}}
+        <span class="deadline">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          {{.Deadline.Format "Mon 2 Jan 15:04"}}
+        </span>
+        {{end}}
+      </div>
+    </div>
+    <form method="post" action="/tasks/{{.ID}}/delete" class="inline" data-confirm="Hapus task ini?">
+      <button type="submit" class="task-action-del" title="Hapus">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+      </button>
+    </form>
+  </li>
+  {{end}}
+</ul>
+{{end}}

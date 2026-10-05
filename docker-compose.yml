@@ -1,0 +1,51 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: todo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: todo
+    volumes:
+      - todo_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U todo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    container_name: todo-app-1
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_PORT: "8080"
+      DATABASE_URL: postgres://todo:${POSTGRES_PASSWORD:-changeme}@db:5432/todo?sslmode=disable
+      SESSION_SECRET: ${SESSION_SECRET:?set a random secret in .env}
+      TZ: ${TZ:-Asia/Jakarta}
+
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-tade}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set admin password in .env}
+
+      AI_PROVIDER: ${AI_PROVIDER:-bridge}
+      BRIDGE_URL: ${BRIDGE_URL:-http://host.docker.internal:8765}
+      BRIDGE_MODEL: ${BRIDGE_MODEL:-claude-sonnet-4-6}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.0-flash}
+    ports:
+      - "8083:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - default
+      - proxy
+
+volumes:
+  todo_pgdata:
+
+networks:
+  proxy:
+    external: true

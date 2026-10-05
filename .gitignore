@@ -1,0 +1,15 @@
+.env
+.env.local
+*.log
+go.sum.bak
+
+# build binary
+/todo
+
+# misc
+*.jpg
+*.jpeg
+*.png
+*.gif
+.DS_Store
+Thumbs.db

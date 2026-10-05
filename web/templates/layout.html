@@ -1,0 +1,117 @@
+{{define "layout"}}<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="{{if eq .Theme "dark"}}dark{{else if eq .Theme "light"}}light{{else}}light dark{{end}}">
+  <meta name="theme-color" content="#ffffff">
+  <title>todo</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/static/icons/icon-192.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.svg">
+  <link rel="stylesheet" href="/static/app.css?v=15">
+  {{if ne .Font "system"}}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  {{if eq .Font "inter"}}<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">{{end}}
+  {{if eq .Font "jakarta"}}<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">{{end}}
+  {{if eq .Font "geist"}}<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">{{end}}
+  {{end}}
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+</head>
+<body class="theme-{{.Theme}} font-{{.Font}}">
+  <main class="container">
+    {{template "content" .}}
+  </main>
+
+  {{if .Nav}}{{template "bottomnav" .Nav}}{{end}}
+
+  <dialog id="confirm-dialog" class="confirm-dialog">
+    <div class="confirm-body">
+      <p id="confirm-msg" class="confirm-msg"></p>
+      <div class="confirm-actions">
+        <button type="button" class="ghost" id="confirm-cancel">Batal</button>
+        <button type="button" class="danger" id="confirm-ok">Hapus</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    (function () {
+      var dlg = document.getElementById('confirm-dialog');
+      var msgEl = document.getElementById('confirm-msg');
+      var okBtn = document.getElementById('confirm-ok');
+      var cancelBtn = document.getElementById('confirm-cancel');
+      var pending = null;
+
+      function closeDlg(result) {
+        dlg.close();
+        if (pending) { pending(result); pending = null; }
+      }
+      okBtn.addEventListener('click', function () { closeDlg(true); });
+      cancelBtn.addEventListener('click', function () { closeDlg(false); });
+      dlg.addEventListener('click', function (e) {
+        var r = dlg.getBoundingClientRect();
+        if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeDlg(false);
+      });
+      dlg.addEventListener('cancel', function (e) { e.preventDefault(); closeDlg(false); });
+
+      window.confirmBox = function (msg, opts) {
+        msgEl.textContent = msg;
+        okBtn.textContent = (opts && opts.okLabel) || 'Hapus';
+        okBtn.className = (opts && opts.okClass) || 'danger';
+        return new Promise(function (resolve) { pending = resolve; dlg.showModal(); });
+      };
+
+      // Intercept forms with data-confirm
+      document.addEventListener('submit', function (e) {
+        var form = e.target;
+        var msg = form.getAttribute && form.getAttribute('data-confirm');
+        if (!msg || form.dataset.confirmed === 'yes') return;
+        e.preventDefault();
+        window.confirmBox(msg, {
+          okLabel: form.getAttribute('data-confirm-ok') || 'Hapus',
+          okClass: form.getAttribute('data-confirm-class') || 'danger',
+        }).then(function (ok) {
+          if (!ok) return;
+          form.dataset.confirmed = 'yes';
+          form.submit();
+        });
+      }, true);
+    })();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(console.error);
+    }
+  </script>
+</body>
+</html>{{end}}
+
+{{define "bottomnav"}}
+<nav class="bottom-nav">
+  <a href="/home" class="nav-item {{if eq . "home"}}active{{end}}">
+    {{template "icon-home" .}}
+    <span>Home</span>
+  </a>
+  <a href="/chat" class="nav-item {{if eq . "chat"}}active{{end}}">
+    {{template "icon-chat" .}}
+    <span>Chat</span>
+  </a>
+  <a href="/todo" class="nav-item {{if eq . "todo"}}active{{end}}">
+    {{template "icon-check" .}}
+    <span>Todo</span>
+  </a>
+  <a href="/settings" class="nav-item {{if eq . "settings"}}active{{end}}">
+    {{template "icon-settings" .}}
+    <span>Setting</span>
+  </a>
+</nav>
+{{end}}
+
+{{define "icon-home"}}<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V9.5z"/></svg>{{end}}
+
+{{define "icon-chat"}}<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>{{end}}
+
+{{define "icon-check"}}<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>{{end}}
+
+{{define "icon-settings"}}<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>{{end}}

@@ -1,0 +1,211 @@
+{{define "content"}}
+{{with .Task}}
+<header class="page-header detail-header">
+  <a href="/home" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg>
+    Kembali
+  </a>
+  <div class="detail-badges">
+    {{if .ProjectName}}
+    <span class="project-badge"><span class="dot" style="background:{{.ProjectColor}}"></span>{{.ProjectName}}</span>
+    {{end}}
+    <span class="status-badge status-{{.Status}}">{{.Status}}</span>
+  </div>
+</header>
+
+<!-- VIEW MODE (default) -->
+<article class="card detail-view" id="view-mode">
+  <div class="view-head">
+    <h1 class="view-title">{{.Title}}</h1>
+    <button type="button" class="ghost btn-edit" onclick="toggleEdit(true)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Edit
+    </button>
+  </div>
+
+  {{if .Description}}
+  <div class="view-section">
+    <div class="view-label">Deskripsi</div>
+    <p class="view-description">{{.Description}}</p>
+  </div>
+  {{else}}
+  <div class="view-section view-empty">
+    <p>Belum ada deskripsi. Klik Edit untuk tambah.</p>
+  </div>
+  {{end}}
+
+  <div class="view-grid">
+    <div class="view-cell">
+      <div class="view-label">Prioritas</div>
+      <div class="view-value"><span class="dot p-{{.Priority}}"></span>{{.Priority}}</div>
+    </div>
+    <div class="view-cell">
+      <div class="view-label">Kompleksitas</div>
+      <div class="view-value">{{.Complexity}}</div>
+    </div>
+    <div class="view-cell">
+      <div class="view-label">Deadline</div>
+      <div class="view-value">{{if .Deadline}}{{.Deadline.Format "Mon 02 Jan 2006, 15:04"}}{{else}}<span class="view-muted">—</span>{{end}}</div>
+    </div>
+    <div class="view-cell">
+      <div class="view-label">Estimasi</div>
+      <div class="view-value">{{if .EstimatedMinutes}}~{{.EstimatedMinutes}} menit{{else}}<span class="view-muted">—</span>{{end}}</div>
+    </div>
+  </div>
+</article>
+
+<!-- EDIT MODE (hidden by default) -->
+<form method="post" action="/tasks/{{.ID}}/edit" class="card detail-form" id="edit-mode" hidden>
+  <label class="field field-title">
+    <span>Judul</span>
+    <input type="text" name="title" value="{{.Title}}" required maxlength="200">
+  </label>
+
+  <label class="field">
+    <span>Deskripsi</span>
+    <textarea name="description" rows="4" placeholder="Tambah detail, catatan, link...">{{.Description}}</textarea>
+  </label>
+
+  <div class="detail-row">
+    <label class="field">
+      <span>Prioritas</span>
+      <select name="priority">
+        {{range $.Priorities}}
+        <option value="{{.}}" {{if eq . $.Task.Priority}}selected{{end}}>{{.}}</option>
+        {{end}}
+      </select>
+    </label>
+    <label class="field">
+      <span>Kompleksitas</span>
+      <select name="complexity">
+        {{range $.Complexities}}
+        <option value="{{.}}" {{if eq . $.Task.Complexity}}selected{{end}}>{{.}}</option>
+        {{end}}
+      </select>
+    </label>
+  </div>
+
+  <div class="detail-row">
+    <label class="field">
+      <span>Deadline</span>
+      <input type="datetime-local" name="deadline" value="{{$.DeadlineInput}}">
+    </label>
+    <label class="field">
+      <span>Estimasi (menit)</span>
+      <input type="number" name="estimated_minutes" value="{{if .EstimatedMinutes}}{{.EstimatedMinutes}}{{end}}" min="1" placeholder="opsional">
+    </label>
+  </div>
+
+  <div class="detail-actions">
+    <button type="submit">Simpan perubahan</button>
+    <button type="button" class="ghost" onclick="toggleEdit(false)">Batal</button>
+  </div>
+</form>
+
+<!-- always visible: project + action buttons (hidden in edit mode) -->
+<div id="view-actions">
+  <form method="post" action="/tasks/{{.ID}}/project" class="card">
+    <label class="field">
+      <span>Pindah project</span>
+      <div style="display:flex;gap:.5rem">
+        <select name="project_id" style="flex:1">
+          {{range $.Projects}}
+          <option value="{{.ID}}" {{if eq .ID $.SelectedProjectID}}selected{{end}}>{{.Name}}</option>
+          {{end}}
+        </select>
+        <button type="submit" class="ghost">Pindah</button>
+      </div>
+    </label>
+  </form>
+
+  <div class="detail-actions">
+    {{if ne .Status "in_progress"}}
+    <form method="post" action="/tasks/{{.ID}}/status" class="inline">
+      <input type="hidden" name="status" value="in_progress">
+      <button type="submit">Mulai kerjain</button>
+    </form>
+    {{end}}
+    {{if ne .Status "done"}}
+    <form method="post" action="/tasks/{{.ID}}/status" class="inline">
+      <input type="hidden" name="status" value="done">
+      <button type="submit" class="ghost">Tandai selesai</button>
+    </form>
+    {{else}}
+    <form method="post" action="/tasks/{{.ID}}/status" class="inline">
+      <input type="hidden" name="status" value="pending">
+      <button type="submit" class="ghost">Batalkan selesai</button>
+    </form>
+    {{end}}
+    <form method="post" action="/tasks/{{.ID}}/delete" class="inline" data-confirm="Hapus task ini?">
+      <button type="submit" class="danger">Hapus</button>
+    </form>
+  </div>
+</div>
+
+<section class="section" id="subtasks">
+  <h2 class="section-title">
+    <span>Breakdown</span>
+    {{if $.Subtasks}}<span class="count">{{$.SubtasksDone}} / {{len $.Subtasks}}</span>{{end}}
+  </h2>
+
+  <div class="quickadd quickadd-sub">
+    <form method="post" action="/tasks/{{.ID}}/subtasks">
+      <textarea name="input" rows="1" placeholder="Pecah jadi sub-task... ketik bebas" required></textarea>
+      <div class="quickadd-actions">
+        <span class="hint">Project ikut parent otomatis</span>
+        <button type="submit">Tambah</button>
+      </div>
+    </form>
+  </div>
+
+  {{if $.Subtasks}}
+  <ul class="tasklist">
+    {{range $.Subtasks}}
+    <li class="task {{if eq .Status "done"}}done{{end}}">
+      <div class="task-check">
+        <form method="post" action="/tasks/{{.ID}}/status" class="inline">
+          <input type="hidden" name="status" value="{{if eq .Status "done"}}pending{{else}}done{{end}}">
+          <button type="submit" title="{{if eq .Status "done"}}Batalkan selesai{{else}}Tandai selesai{{end}}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+        </form>
+      </div>
+      <div class="task-main">
+        <a href="/tasks/{{.ID}}" class="task-title">{{.Title}}</a>
+        <div class="task-meta">
+          <span class="dot p-{{.Priority}}"></span>
+          <span>{{.Priority}}</span>
+          {{if .Deadline}}
+          <span class="deadline">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            {{.Deadline.Format "02 Jan 15:04"}}
+          </span>
+          {{end}}
+          {{if .EstimatedMinutes}}<span>~{{.EstimatedMinutes}} mnt</span>{{end}}
+        </div>
+      </div>
+      <form method="post" action="/tasks/{{.ID}}/delete" class="inline" data-confirm="Hapus sub-task ini?">
+        <button type="submit" class="task-action-del" title="Hapus">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      </form>
+    </li>
+    {{end}}
+  </ul>
+  {{end}}
+</section>
+
+<script>
+  function toggleEdit(on) {
+    document.getElementById('view-mode').hidden = on;
+    document.getElementById('edit-mode').hidden = !on;
+    document.getElementById('view-actions').hidden = on;
+    if (on) {
+      var ta = document.querySelector('#edit-mode textarea');
+      if (ta) { ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length; }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+</script>
+{{end}}
+{{end}}

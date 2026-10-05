@@ -1,0 +1,95 @@
+{{define "content"}}
+<header class="page-header">
+  <h1>Setting</h1>
+  <p class="subtitle">Project & preferensi</p>
+</header>
+
+{{if .Error}}<div class="error">{{.Error}}</div>{{end}}
+{{if .Info}}<div class="info">{{.Info}}</div>{{end}}
+
+<section class="section">
+  <h2 class="section-title"><span>Projects</span><span class="count">{{len .Projects}}</span></h2>
+
+  <ul class="project-list">
+    {{range .Projects}}
+    {{if .IsDefault}}
+    <li class="project-row project-row-static">
+      <span class="project-dot" style="background:{{.Color}}"></span>
+      <span class="project-name">{{.Name}}</span>
+      <span class="project-badge-tag">default</span>
+    </li>
+    {{else}}
+    <li>
+      <details class="project-row">
+        <summary>
+          <span class="project-dot" style="background:{{.Color}}"></span>
+          <span class="project-name">{{.Name}}</span>
+          <svg class="project-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg>
+        </summary>
+        <div class="project-edit">
+          <form method="post" action="/projects/{{.ID}}/rename" class="project-edit-form">
+            <input type="text" name="name" value="{{.Name}}" required maxlength="60" placeholder="Nama project">
+            <button type="submit">Simpan</button>
+          </form>
+          <form method="post" action="/projects/{{.ID}}/delete" class="inline" data-confirm="Hapus project ini? Semua task-nya akan dipindah ke {{$.DefaultName}}.">
+            <button type="submit" class="link-danger">Hapus project</button>
+          </form>
+        </div>
+      </details>
+    </li>
+    {{end}}
+    {{end}}
+  </ul>
+
+  <details class="project-add">
+    <summary>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Tambah project baru
+    </summary>
+    <form method="post" action="/projects" class="project-add-form">
+      <input type="text" name="name" placeholder="Nama project (misal: Website Redesign)" required maxlength="60" autofocus>
+      <div class="color-palette">
+        {{range $i, $c := .Colors}}
+        <input type="radio" name="color" id="c-{{$i}}" value="{{$c}}" {{if eq $i 0}}checked{{end}}>
+        <label for="c-{{$i}}" style="--c:{{$c}}" title="{{$c}}"></label>
+        {{end}}
+      </div>
+      <button type="submit">Buat project</button>
+    </form>
+  </details>
+</section>
+
+<section class="section">
+  <h2 class="section-title"><span>Tampilan</span></h2>
+
+  <form method="post" action="/prefs/theme" class="pref-group">
+    <div class="pref-label">Tema</div>
+    <div class="pref-choices">
+      {{range .ThemeChoices}}
+      <label class="pref-choice">
+        <input type="radio" name="theme" value="{{.Key}}" {{if eq .Key $.CurrentTheme}}checked{{end}} onchange="this.form.submit()">
+        <span>{{.Label}}</span>
+      </label>
+      {{end}}
+    </div>
+  </form>
+
+  <form method="post" action="/prefs/font" class="pref-group">
+    <div class="pref-label">Font</div>
+    <div class="pref-choices">
+      {{range .FontChoices}}
+      <label class="pref-choice">
+        <input type="radio" name="font" value="{{.Key}}" {{if eq .Key $.CurrentFont}}checked{{end}} onchange="this.form.submit()">
+        <span style="font-family:{{.Sample}}">{{.Label}}</span>
+      </label>
+      {{end}}
+    </div>
+  </form>
+</section>
+
+<section class="section" style="margin-top:2rem">
+  <form method="post" action="/logout">
+    <button type="submit" class="ghost" style="width:100%">Logout</button>
+  </form>
+</section>
+{{end}}

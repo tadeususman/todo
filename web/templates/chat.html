@@ -1,0 +1,128 @@
+{{define "content"}}
+<header class="page-header chat-header">
+  <div>
+    <h1>Chat</h1>
+    <p class="subtitle">Tanya apa aja tentang task kamu</p>
+  </div>
+  {{if .Messages}}
+  <form method="post" action="/chat/clear" class="inline" data-confirm="Hapus semua chat?">
+    <button type="submit" class="link-danger">Bersihkan</button>
+  </form>
+  {{end}}
+</header>
+
+<div class="chat-thread" id="chat-thread">
+  {{if not .Messages}}
+  <div class="empty">
+    {{template "icon-chat" .}}
+    <p>Belum ada chat. Coba tanya: "task urgent minggu ini apa aja?"</p>
+  </div>
+  {{end}}
+
+  {{range .Messages}}{{template "chat-msg" .}}{{end}}
+</div>
+
+<form method="post" action="/chat" class="chat-input">
+  <textarea name="input" rows="1" placeholder="Ketik pertanyaan..." required onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();this.form.submit();}"></textarea>
+  <button type="submit" aria-label="Kirim">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+  </button>
+</form>
+
+<script>
+  (function () {
+    var thread = document.getElementById('chat-thread');
+    if (thread) thread.scrollTop = thread.scrollHeight;
+
+    var form = document.querySelector('.chat-input');
+    if (!form) return;
+    var textarea = form.querySelector('textarea');
+    var sendBtn = form.querySelector('button[type="submit"]');
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function appendOptimisticUser(text, tempId) {
+      var html =
+        '<div class="msg msg-user msg-pending" id="' + tempId + '">' +
+          '<div class="msg-bubble"><div class="msg-content">' + escapeHtml(text) + '</div></div>' +
+          '<div class="msg-time">kirim...</div>' +
+        '</div>';
+      thread.insertAdjacentHTML('beforeend', html);
+    }
+
+    function appendTyping() {
+      var html =
+        '<div class="msg msg-assistant msg-typing" id="typing-indicator">' +
+          '<div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>' +
+        '</div>';
+      thread.insertAdjacentHTML('beforeend', html);
+      thread.scrollTop = thread.scrollHeight;
+    }
+
+    function scrollBottom() { thread.scrollTop = thread.scrollHeight; }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var text = textarea.value.trim();
+      if (!text) return;
+
+      var tempId = 'temp-' + Date.now();
+      appendOptimisticUser(text, tempId);
+      textarea.value = '';
+      textarea.style.height = 'auto';
+      scrollBottom();
+      appendTyping();
+      sendBtn.disabled = true;
+
+      var body = new URLSearchParams();
+      body.append('input', text);
+
+      fetch('/chat', {
+        method: 'POST',
+        headers: { 'X-Chat-Fetch': '1', 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+        credentials: 'same-origin',
+      }).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+      }).then(function (html) {
+        var tmp = document.getElementById(tempId); if (tmp) tmp.remove();
+        var typ = document.getElementById('typing-indicator'); if (typ) typ.remove();
+        thread.insertAdjacentHTML('beforeend', html);
+        scrollBottom();
+      }).catch(function (err) {
+        var typ = document.getElementById('typing-indicator'); if (typ) typ.remove();
+        var tmp = document.getElementById(tempId);
+        if (tmp) {
+          tmp.classList.remove('msg-pending');
+          var time = tmp.querySelector('.msg-time');
+          if (time) { time.textContent = 'gagal kirim'; time.style.color = 'var(--danger-text)'; }
+        }
+      }).finally(function () {
+        sendBtn.disabled = false;
+        textarea.focus();
+      });
+    });
+  })();
+</script>
+{{end}}
+
+{{define "chat-msg"}}
+<div class="msg msg-{{.Role}}" id="msg-{{.ID}}">
+  <div class="msg-bubble">
+    <div class="msg-content">{{markdown .Content}}</div>
+    <form method="post" action="/chat/{{.ID}}/delete" class="inline msg-del" data-confirm="Hapus pesan ini?">
+      <button type="submit" class="icon" title="Hapus">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="14" height="14"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+      </button>
+    </form>
+  </div>
+  <div class="msg-time">{{.CreatedAt.Format "15:04"}}</div>
+</div>
+{{end}}
+
+{{define "chat-pair"}}{{with .User}}{{template "chat-msg" .}}{{end}}{{with .Assistant}}{{template "chat-msg" .}}{{end}}{{end}}

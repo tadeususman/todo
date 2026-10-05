@@ -1,0 +1,26 @@
+{{define "content"}}
+<div class="auth-container">
+  <div class="brand">
+    <div class="logo">
+      {{template "icon-check" .}}
+    </div>
+    <h1>todo</h1>
+  </div>
+
+  {{if .Error}}<div class="error">{{.Error}}</div>{{end}}
+
+  <form method="post" action="/login" class="stack">
+    <label class="field">
+      <span>Username</span>
+      <input type="text" name="username" autocomplete="username" required autofocus>
+    </label>
+    <label class="field">
+      <span>Password</span>
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <button type="submit">Masuk</button>
+  </form>
+</div>
+
+<script>document.body.classList.add('auth')</script>
+{{end}}
