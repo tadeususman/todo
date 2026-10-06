@@ -17,6 +17,22 @@ type Message struct {
 	Role      string
 	Content   string
 	CreatedAt time.Time
+
+	// Changes the assistant proposed with this message, and where they stand (pending | applied | dismissed).
+	Actions      []Action
+	ActionStatus string
+}
+
+const msgCols = `id, user_id, role, content, created_at, COALESCE(actions, ''), action_status`
+
+func scanMessage(sc interface{ Scan(...any) error }) (Message, error) {
+	var m Message
+	var actions string
+	if err := sc.Scan(&m.ID, &m.UserID, &m.Role, &m.Content, &m.CreatedAt, &actions, &m.ActionStatus); err != nil {
+		return m, err
+	}
+	m.Actions = decodeActions(actions)
+	return m, nil
 }
 
 func List(ctx context.Context, db *sql.DB, userID int64, limit int) ([]Message, error) {
@@ -24,7 +40,7 @@ func List(ctx context.Context, db *sql.DB, userID int64, limit int) ([]Message, 
 		limit = 100
 	}
 	rows, err := db.QueryContext(ctx, `
-		SELECT id, user_id, role, content, created_at
+		SELECT `+msgCols+`
 		FROM chat_messages
 		WHERE user_id = $1
 		ORDER BY created_at ASC, id ASC
@@ -36,8 +52,8 @@ func List(ctx context.Context, db *sql.DB, userID int64, limit int) ([]Message, 
 	defer rows.Close()
 	var out []Message
 	for rows.Next() {
-		var m Message
-		if err := rows.Scan(&m.ID, &m.UserID, &m.Role, &m.Content, &m.CreatedAt); err != nil {
+		m, err := scanMessage(rows)
+		if err != nil {
 			return nil, err
 		}
 		out = append(out, m)
@@ -67,11 +83,10 @@ func Clear(ctx context.Context, db *sql.DB, userID int64) error {
 
 // Get returns a single message owned by the user.
 func Get(ctx context.Context, db *sql.DB, userID, id int64) (*Message, error) {
-	var m Message
-	err := db.QueryRowContext(ctx, `
-		SELECT id, user_id, role, content, created_at
+	m, err := scanMessage(db.QueryRowContext(ctx, `
+		SELECT `+msgCols+`
 		FROM chat_messages WHERE id = $1 AND user_id = $2`,
-		id, userID).Scan(&m.ID, &m.UserID, &m.Role, &m.Content, &m.CreatedAt)
+		id, userID))
 	if err != nil {
 		return nil, err
 	}

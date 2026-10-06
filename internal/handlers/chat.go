@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -55,12 +56,15 @@ func (a *App) ChatSend(w http.ResponseWriter, r *http.Request) {
 	tasks, _ := task.ListOpen(r.Context(), a.DB, uid)
 	projects, _ := project.List(r.Context(), a.DB, uid)
 
-	reply, err := a.LLM.Chat(r.Context(), username, history, input, tasks, projects)
+	reply, proposed, err := a.LLM.Chat(r.Context(), username, history, input, tasks, projects)
 	if err != nil {
 		log.Printf("chat llm: %v", err)
 		reply = "Maaf, asisten lagi tidak bisa dihubungi. Coba lagi sebentar."
+		proposed = nil
 	}
-	assistantID, _ := chat.Save(r.Context(), a.DB, uid, chat.RoleAssistant, reply)
+	// LLM output is untrusted: keep only changes to this user's own tasks with acceptable values.
+	actions := chat.Prepare(r.Context(), a.DB, uid, proposed)
+	assistantID, _ := chat.SaveWithActions(r.Context(), a.DB, uid, chat.RoleAssistant, reply, actions)
 
 	// JS fetch mode → return HTML snippet of both bubbles so client can replace optimistic + typing
 	if r.Header.Get("X-Chat-Fetch") == "1" {
@@ -74,6 +78,56 @@ func (a *App) ChatSend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	http.Redirect(w, r, "/chat", http.StatusSeeOther)
+}
+
+// ChatApply runs the changes the assistant proposed on a message, after the user confirmed them.
+func (a *App) ChatApply(w http.ResponseWriter, r *http.Request) {
+	uid := authmw.UserID(r)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	actions, err := chat.ClaimActions(r.Context(), a.DB, uid, id, chat.ActionApplied)
+	if errors.Is(err, chat.ErrNoPending) {
+		setFlash(w, "Perubahan ini sudah diproses.")
+		http.Redirect(w, r, "/chat", http.StatusSeeOther)
+		return
+	}
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	ok, failed := 0, 0
+	for _, act := range actions {
+		if err := chat.Apply(r.Context(), a.DB, uid, act); err != nil {
+			log.Printf("chat apply task=%d field=%s: %v", act.TaskID, act.Field, err)
+			failed++
+			continue
+		}
+		ok++
+	}
+	msg := strconv.Itoa(ok) + " perubahan diterapkan."
+	if failed > 0 {
+		msg += " " + strconv.Itoa(failed) + " gagal (task mungkin sudah dihapus)."
+	}
+	setFlash(w, msg)
+	http.Redirect(w, r, "/chat", http.StatusSeeOther)
+}
+
+// ChatDismiss drops the proposed changes without applying them.
+func (a *App) ChatDismiss(w http.ResponseWriter, r *http.Request) {
+	uid := authmw.UserID(r)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	if _, err := chat.ClaimActions(r.Context(), a.DB, uid, id, chat.ActionDismissed); err != nil && !errors.Is(err, chat.ErrNoPending) {
+		serverError(w, err)
+		return
+	}
 	http.Redirect(w, r, "/chat", http.StatusSeeOther)
 }
 

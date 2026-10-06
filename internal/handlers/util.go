@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/lib/pq"
@@ -39,6 +40,27 @@ func safeRedirect(target, fallback string) string {
 		return fallback
 	}
 	return target
+}
+
+// maxBulkIDs bounds one bulk action so a crafted request can't build a huge query.
+const maxBulkIDs = 200
+
+// parseIDs turns form values into unique positive IDs (order kept), silently dropping junk.
+// ok is false when more than maxBulkIDs distinct IDs were sent.
+func parseIDs(vals []string) (ids []int64, ok bool) {
+	seen := map[int64]bool{}
+	for _, v := range vals {
+		id, err := strconv.ParseInt(strings.TrimSpace(v), 10, 64)
+		if err != nil || id <= 0 || seen[id] {
+			continue
+		}
+		if len(ids) == maxBulkIDs {
+			return nil, false
+		}
+		seen[id] = true
+		ids = append(ids, id)
+	}
+	return ids, true
 }
 
 const flashCookie = "todo_flash"

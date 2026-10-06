@@ -92,6 +92,9 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_chat_user_time ON chat_messages(user_id, created_at);
+-- Perubahan task yang diusulkan asisten (JSON), menunggu konfirmasi user: pending | applied | dismissed.
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS actions       TEXT;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS action_status TEXT NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS ai_logs (
     id            BIGSERIAL PRIMARY KEY,

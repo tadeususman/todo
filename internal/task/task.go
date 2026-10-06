@@ -6,6 +6,8 @@ import (
 	"errors"
 	"strings"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 var (
@@ -259,6 +261,34 @@ func CountArchived(ctx context.Context, db *sql.DB, userID int64) int {
 func Delete(ctx context.Context, db *sql.DB, userID, id int64) error {
 	_, err := db.ExecContext(ctx, `DELETE FROM tasks WHERE id = $1 AND user_id = $2`, id, userID)
 	return err
+}
+
+// DeleteMany permanently deletes the user's tasks among ids (sub-tasks go with them via ON DELETE CASCADE).
+// IDs belonging to other users are ignored. It returns how many top-level rows were removed.
+func DeleteMany(ctx context.Context, db *sql.DB, userID int64, ids []int64) (int64, error) {
+	if len(ids) == 0 {
+		return 0, nil
+	}
+	res, err := db.ExecContext(ctx, `DELETE FROM tasks WHERE user_id = $1 AND id = ANY($2)`, userID, pq.Array(ids))
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
+}
+
+// ArchiveMany archives the user's top-level tasks among ids. Statuses are left untouched.
+func ArchiveMany(ctx context.Context, db *sql.DB, userID int64, ids []int64) (int64, error) {
+	if len(ids) == 0 {
+		return 0, nil
+	}
+	res, err := db.ExecContext(ctx, `
+		UPDATE tasks SET archived_at = now(), updated_at = now()
+		WHERE user_id = $1 AND parent_id IS NULL AND archived_at IS NULL AND id = ANY($2)`,
+		userID, pq.Array(ids))
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
 }
 
 func scanTasks(rows *sql.Rows) ([]Task, error) {

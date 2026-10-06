@@ -1762,3 +1762,33 @@ body.splash-on { overflow: hidden; }
 
 /* loading overlay: looping logo replaces the spinner */
 .busy-logo { margin: 0 0 10px; }
+
+/* multi-select on the Todo page: bulk delete / archive */
+.hero-side { display: flex; align-items: center; gap: .6rem; }
+.select-toggle { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 999px; padding: .3rem .85rem; font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; }
+.select-toggle[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: transparent; }
+.task-sel { display: none; width: 22px; height: 22px; flex-shrink: 0; margin: 0 .6rem 0 0; accent-color: var(--accent-strong); cursor: pointer; }
+.select-mode .task-sel { display: block; align-self: center; }
+.select-mode .task-check-form { display: none; }
+.select-mode .task { cursor: pointer; }
+.select-mode .task:has(.task-sel:checked) { background: var(--surface-alt); }
+.bulk-bar { position: fixed; left: 0; right: 0; bottom: calc(var(--nav-height) + 12px + env(safe-area-inset-bottom, 0px)); z-index: 60; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; justify-content: center; margin: 0 auto; width: fit-content; max-width: calc(100% - 24px); padding: .6rem .75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 8px 28px rgba(15, 23, 42, .22); }
+.bulk-bar[hidden] { display: none; }
+.bulk-count { font-weight: 600; font-size: .9rem; padding: 0 .25rem; }
+.bulk-btn { border: 1px solid var(--border); background: var(--surface-alt); color: var(--text); border-radius: 10px; padding: .45rem .8rem; font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; }
+.bulk-btn:disabled { opacity: .45; cursor: not-allowed; }
+.bulk-delete { background: var(--danger); color: var(--danger-text); border-color: transparent; }
+body.bulk-on .fab { display: none; }
+
+/* chat: task changes proposed by the assistant, confirmed by the user */
+.msg-actions { margin-top: .6rem; padding: .6rem .75rem; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-alt); }
+.msg-actions-head { margin: 0 0 .4rem; font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.msg-actions ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .35rem; }
+.msg-actions li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .15rem .75rem; font-size: .9rem; }
+.msg-actions li a { color: var(--text); font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
+.msg-actions li span { color: var(--text-muted); }
+.msg-actions-btns { display: flex; gap: .5rem; margin-top: .6rem; }
+.msg-actions-btns button { border: 1px solid var(--border); border-radius: 10px; padding: .45rem .9rem; font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; background: var(--surface); color: var(--text); }
+.msg-actions-btns .act-apply { background: var(--accent-soft); color: var(--text); border-color: transparent; }
+.msg-actions-note { margin: .5rem 0 0; font-size: .8rem; color: var(--text-muted); }
+.msg-actions-dismissed li { opacity: .55; text-decoration: line-through; }

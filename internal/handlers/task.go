@@ -361,6 +361,47 @@ func (a *App) taskSetArchived(archived bool) http.HandlerFunc {
 	}
 }
 
+// TaskBulk deletes or archives several tasks at once (multi-select on the Todo page).
+func (a *App) TaskBulk(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "bad form", http.StatusBadRequest)
+		return
+	}
+	back := safeRedirect(r.FormValue("redirect"), "/todo")
+	ids, ok := parseIDs(r.Form["ids"])
+	if !ok {
+		setFlash(w, "Terlalu banyak task dipilih sekaligus (maks. 200).")
+		http.Redirect(w, r, back, http.StatusSeeOther)
+		return
+	}
+	if len(ids) == 0 {
+		setFlash(w, "Belum ada task yang dipilih.")
+		http.Redirect(w, r, back, http.StatusSeeOther)
+		return
+	}
+	uid := authmw.UserID(r)
+	var n int64
+	var err error
+	var msg string
+	switch r.FormValue("action") {
+	case "delete":
+		n, err = task.DeleteMany(r.Context(), a.DB, uid, ids)
+		msg = strconv.FormatInt(n, 10) + " task dihapus."
+	case "archive":
+		n, err = task.ArchiveMany(r.Context(), a.DB, uid, ids)
+		msg = strconv.FormatInt(n, 10) + " task diarsipkan. Lihat di Setting → Arsip."
+	default:
+		http.Error(w, "unknown action", http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	setFlash(w, msg)
+	http.Redirect(w, r, back, http.StatusSeeOther)
+}
+
 func (a *App) TaskArchive() http.HandlerFunc   { return a.taskSetArchived(true) }
 func (a *App) TaskUnarchive() http.HandlerFunc { return a.taskSetArchived(false) }
 

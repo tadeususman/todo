@@ -122,6 +122,7 @@ func main() {
 		})
 
 		r.Post("/tasks", app.TaskCreate)
+		r.Post("/tasks/bulk", app.TaskBulk)
 		r.Get("/tasks/{id}", app.TaskView)
 		r.Post("/tasks/{id}/edit", app.TaskEdit)
 		r.Post("/tasks/{id}/subtasks", app.TaskCreateSubtask)
@@ -153,6 +154,8 @@ func main() {
 		r.Post("/chat", app.ChatSend)
 		r.Post("/chat/clear", app.ChatClear)
 		r.Post("/chat/{id}/delete", app.ChatDelete)
+		r.Post("/chat/{id}/apply", app.ChatApply)
+		r.Post("/chat/{id}/dismiss", app.ChatDismiss)
 	})
 
 	log.Printf("todo listening on :%s (provider=%s model=%s)", cfg.AppPort, aiClient.Provider(), aiClient.Model())

@@ -4,7 +4,10 @@
     <p class="eyebrow">Agenda</p>
     <h1>Todo</h1>
   </div>
-  <span class="hero-count">{{.TotalOpen}} terbuka</span>
+  <div class="hero-side">
+    <span class="hero-count">{{.TotalOpen}} terbuka</span>
+    {{if .Sections}}<button type="button" class="select-toggle" id="select-toggle" aria-pressed="false">Pilih</button>{{end}}
+  </div>
 </header>
 
 <nav class="chip-row" aria-label="Filter project">
@@ -23,6 +26,7 @@
 </div>
 {{end}}
 
+<div id="todo-list">
 {{range .Sections}}
 <details class="todo-section" {{if ne .Key "done"}}open{{end}}>
   <summary>
@@ -35,8 +39,76 @@
   {{template "todo-tasklist" .Tasks}}
 </details>
 {{end}}
+</div>
 
 {{$r := "/todo"}}{{if .FilterID}}{{$r = printf "/todo?project=%d" .FilterID}}{{end}}
+<form id="bulk-form" class="bulk-bar" method="post" action="/tasks/bulk" hidden>
+  <input type="hidden" name="redirect" value="{{$r}}">
+  <span class="bulk-count" id="bulk-count" aria-live="polite">0 dipilih</span>
+  <button type="button" class="bulk-btn" id="bulk-all">Semua</button>
+  <button type="submit" class="bulk-btn bulk-archive" name="action" value="archive" id="bulk-archive">Arsipkan</button>
+  <button type="button" class="bulk-btn bulk-delete" id="bulk-delete">Hapus</button>
+  <button type="button" class="bulk-btn" id="bulk-cancel">Batal</button>
+</form>
+<script>
+(function () {
+  var list = document.getElementById('todo-list');
+  var form = document.getElementById('bulk-form');
+  var toggle = document.getElementById('select-toggle');
+  if (!list || !form || !toggle) return;
+  var count = document.getElementById('bulk-count');
+  var boxes = function () { return list.querySelectorAll('.task-sel'); };
+  var checked = function () { return list.querySelectorAll('.task-sel:checked'); };
+
+  function refresh() {
+    var n = checked().length, total = boxes().length;
+    count.textContent = n + ' dipilih';
+    document.getElementById('bulk-archive').disabled = n === 0;
+    document.getElementById('bulk-delete').disabled = n === 0;
+    document.getElementById('bulk-all').textContent = (n === total && total > 0) ? 'Kosongkan' : 'Semua';
+  }
+  function setMode(on) {
+    list.classList.toggle('select-mode', on);
+    document.body.classList.toggle('bulk-on', on);
+    form.hidden = !on;
+    toggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+    toggle.textContent = on ? 'Selesai' : 'Pilih';
+    if (!on) boxes().forEach(function (b) { b.checked = false; });
+    refresh();
+  }
+  toggle.addEventListener('click', function () { setMode(!list.classList.contains('select-mode')); });
+  document.getElementById('bulk-cancel').addEventListener('click', function () { setMode(false); });
+  document.getElementById('bulk-all').addEventListener('click', function () {
+    var all = checked().length !== boxes().length;
+    boxes().forEach(function (b) { b.checked = all; });
+    refresh();
+  });
+  list.addEventListener('change', function (e) { if (e.target.classList.contains('task-sel')) refresh(); });
+  // di mode pilih, ketuk baris = centang (bukan buka detail)
+  list.addEventListener('click', function (e) {
+    if (!list.classList.contains('select-mode')) return;
+    var row = e.target.closest('.task');
+    if (!row || e.target.classList.contains('task-sel')) return;
+    e.preventDefault();
+    var b = row.querySelector('.task-sel');
+    b.checked = !b.checked;
+    refresh();
+  });
+  document.getElementById('bulk-delete').addEventListener('click', function () {
+    var n = checked().length;
+    if (!n) return;
+    window.confirmBox('Hapus ' + n + ' task secara permanen? Sub-task di dalamnya ikut terhapus.').then(function (ok) {
+      if (!ok) return;
+      var h = document.createElement('input');
+      h.type = 'hidden'; h.name = 'action'; h.value = 'delete';
+      form.appendChild(h);
+      form.submit();
+    });
+  });
+  form.addEventListener('submit', function (e) { if (!checked().length) e.preventDefault(); });
+  refresh();
+})();
+</script>
 {{template "quickadd" $r}}
 {{end}}
 

@@ -117,6 +117,19 @@
 <div class="msg msg-{{.Role}}" id="msg-{{.ID}}">
   <div class="msg-bubble">
     <div class="msg-content">{{markdown .Content}}</div>
+    {{if .Actions}}
+    <div class="msg-actions msg-actions-{{.ActionStatus}}">
+      <p class="msg-actions-head">Perubahan yang diusulkan</p>
+      <ul>{{range .Actions}}<li><a href="/tasks/{{.TaskID}}">{{.Title}}</a><span>{{.Label}}</span></li>{{end}}</ul>
+      {{if eq .ActionStatus "pending"}}
+      <div class="msg-actions-btns">
+        <form method="post" action="/chat/{{.ID}}/apply" class="inline"><button type="submit" class="act-apply">Terapkan</button></form>
+        <form method="post" action="/chat/{{.ID}}/dismiss" class="inline"><button type="submit" class="act-dismiss">Batal</button></form>
+      </div>
+      {{else if eq .ActionStatus "applied"}}<p class="msg-actions-note">✓ Sudah diterapkan</p>
+      {{else}}<p class="msg-actions-note">Dibatalkan</p>{{end}}
+    </div>
+    {{end}}
     <form method="post" action="/chat/{{.ID}}/delete" class="inline msg-del" data-confirm="Hapus pesan ini?">
       <button type="submit" class="icon" title="Hapus">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="14" height="14"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>

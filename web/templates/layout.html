@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="48x48" href="/static/icons/favicon-48.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="/static/app.css?v=54">
+  <link rel="stylesheet" href="/static/app.css?v=56">
   {{if ne .Font "system"}}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -263,7 +263,8 @@
 
 {{define "taskrow"}}
 <li class="task {{if eq .Status "done"}}done{{end}}">
-  <form method="post" action="/tasks/{{.ID}}/status" class="inline">
+  <input type="checkbox" class="task-sel" form="bulk-form" name="ids" value="{{.ID}}" aria-label="Pilih task {{.Title}}">
+  <form method="post" action="/tasks/{{.ID}}/status" class="inline task-check-form">
     <input type="hidden" name="status" value="{{if eq .Status "done"}}pending{{else}}done{{end}}">
     <button type="submit" class="check" aria-label="{{if eq .Status "done"}}Batalkan selesai{{else}}Tandai selesai{{end}}">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
