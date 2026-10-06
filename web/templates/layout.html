@@ -7,9 +7,10 @@
   <meta name="theme-color" content="#ffffff">
   <title>todo</title>
   <link rel="manifest" href="/manifest.json">
-  <link rel="icon" href="/static/icons/icon-192.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/static/icons/icon-192.svg">
-  <link rel="stylesheet" href="/static/app.css?v=15">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/static/icons/favicon-48.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="/static/app.css?v=51">
   {{if ne .Font "system"}}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,10 +22,19 @@
 </head>
 <body class="theme-{{.Theme}} font-{{.Font}}">
   <main class="container">
+    {{if .Flash}}<div class="flash" id="flash" role="status"><span>{{.Flash}}</span><button type="button" class="flash-close" aria-label="Tutup" onclick="this.parentNode.remove()">&times;</button></div>{{end}}
     {{template "content" .}}
   </main>
 
   {{if .Nav}}{{template "bottomnav" .Nav}}{{end}}
+
+  <div id="busy-overlay" class="busy-overlay" role="status" aria-live="polite" hidden>
+    <div class="busy-card">
+      <div class="busy-spinner" aria-hidden="true"></div>
+      <p id="busy-msg" class="busy-msg">Membaca task kamu…</p>
+      <p id="busy-sub" class="busy-sub">Sedang merapikan task, biasanya 5–10 detik.</p>
+    </div>
+  </div>
 
   <dialog id="confirm-dialog" class="confirm-dialog">
     <div class="confirm-body">
@@ -78,6 +88,121 @@
           form.submit();
         });
       }, true);
+
+      var busyMsgs = ['Membaca task kamu…', 'Menentukan prioritas & deadline…', 'Memilih project yang cocok…', 'Hampir selesai…'];
+      function showBusy() {
+        var ov = document.getElementById('busy-overlay');
+        var msg = document.getElementById('busy-msg');
+        var sub = document.getElementById('busy-sub');
+        var t0 = Date.now(), i = 0;
+        // Tutup dialog quick-add (top layer) supaya overlay terlihat
+        var qd = document.getElementById('quick-dialog');
+        if (qd && qd.open) qd.close();
+        ov.hidden = false;
+        setInterval(function () {
+          var sec = Math.round((Date.now() - t0) / 1000);
+          i = Math.min(Math.floor(sec / 3), busyMsgs.length - 1);
+          msg.textContent = busyMsgs[i];
+          if (sec >= 15) sub.textContent = 'Masih diproses (' + sec + ' dtk)… mohon tunggu sebentar.';
+          else sub.textContent = 'Sedang merapikan task, biasanya 5–10 detik. (' + sec + ' dtk)';
+        }, 1000);
+      }
+      // Balik dari bfcache: reset state
+      window.addEventListener('pageshow', function (e) { if (e.persisted) location.reload(); });
+
+
+      // Tombol intip password (mata) untuk semua input password
+      var EYE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+      var EYE_OFF = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+      document.querySelectorAll('input[type=password]').forEach(function (input) {
+        var wrap = document.createElement('span');
+        wrap.className = 'pw-wrap';
+        input.parentNode.insertBefore(wrap, input);
+        wrap.appendChild(input);
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'pw-toggle';
+        btn.setAttribute('aria-label', 'Tampilkan password');
+        btn.setAttribute('aria-pressed', 'false');
+        btn.innerHTML = EYE;
+        btn.addEventListener('click', function () {
+          var show = input.type === 'password';
+          input.type = show ? 'text' : 'password';
+          btn.innerHTML = show ? EYE_OFF : EYE;
+          btn.setAttribute('aria-label', show ? 'Sembunyikan password' : 'Tampilkan password');
+          btn.setAttribute('aria-pressed', show);
+          input.focus();
+        });
+        wrap.appendChild(btn);
+      });
+
+      // Validasi form berbahasa Indonesia (pengganti bubble bawaan browser). Aktif untuk form[data-validate].
+      function fieldMsg(el, form) {
+        var v = el.validity, name = el.name;
+        if (v.valueMissing) return 'Wajib diisi.';
+        if (v.typeMismatch && el.type === 'email') return 'Format email tidak valid.';
+        if (v.tooShort || (el.minLength > 0 && el.value.length < el.minLength)) return 'Minimal ' + el.minLength + ' karakter.';
+        if (v.tooLong) return 'Maksimal ' + el.maxLength + ' karakter.';
+        if (v.patternMismatch) return el.title || 'Format tidak sesuai.';
+        if ((name === 'confirm') && form.elements.password && el.value !== form.elements.password.value) return 'Konfirmasi password tidak sama.';
+        if ((name === 'confirm') && form.elements['new'] && el.value !== form.elements['new'].value) return 'Konfirmasi password tidak sama.';
+        return '';
+      }
+      function setFieldError(el, msg) {
+        var anchor = el.parentNode.classList && el.parentNode.classList.contains('pw-wrap') ? el.parentNode : el;
+        var next = anchor.nextElementSibling;
+        var box = next && next.classList.contains('field-error') ? next : null;
+        if (!msg) { if (box) box.remove(); el.classList.remove('invalid'); el.removeAttribute('aria-invalid'); return; }
+        if (!box) { box = document.createElement('small'); box.className = 'field-error'; box.setAttribute('role', 'alert'); anchor.insertAdjacentElement('afterend', box); }
+        box.textContent = msg;
+        el.classList.add('invalid');
+        el.setAttribute('aria-invalid', 'true');
+      }
+      document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (!form.matches || !form.matches('form[data-validate]')) return;
+        var first = null;
+        Array.prototype.forEach.call(form.elements, function (el) {
+          if (!el.willValidate || el.type === 'hidden' || el.type === 'submit') return;
+          var msg = fieldMsg(el, form);
+          setFieldError(el, msg);
+          if (msg && !first) first = el;
+        });
+        if (first) { e.preventDefault(); first.focus(); }
+      }, true);
+      document.addEventListener('input', function (e) {
+        var el = e.target;
+        if (el.classList && el.classList.contains('invalid')) setFieldError(el, fieldMsg(el, el.form));
+      });
+
+      var fl = document.getElementById('flash'); if (fl) setTimeout(function () { fl.remove(); }, 9000);
+
+
+      // Animasi centang: beri efek dulu, baru kirim form (daftar task & sub-task)
+      document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (!form.matches || !form.matches('form[action$="/status"]')) return;
+        var btn = form.querySelector('.check, .sub-check');
+        var row = form.closest('.task, .sub');
+        var status = form.querySelector('input[name=status]');
+        if (!btn || !row || !status || status.value !== 'done') return;
+        if (row.classList.contains('completing')) { e.preventDefault(); return; }
+        if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        e.preventDefault();
+        row.classList.add('completing');
+        setTimeout(function () { form.submit(); }, 340);
+      });
+
+      // Cegah double-submit & kasih feedback untuk form tambah task (parse LLM bisa makan beberapa detik)
+      document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (e.defaultPrevented || !form.matches || !form.matches('form[action="/tasks"], form.sub-add')) return;
+        if (form.dataset.busy === 'yes') { e.preventDefault(); return; }
+        form.dataset.busy = 'yes';
+        var btn = form.querySelector('button[type=submit]');
+        if (btn) { btn.disabled = true; btn.textContent = 'Memproses…'; }
+        showBusy();
+      });
     })();
 
     if ('serviceWorker' in navigator) {
@@ -115,3 +240,70 @@
 {{define "icon-check"}}<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>{{end}}
 
 {{define "icon-settings"}}<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>{{end}}
+
+{{define "taskrow"}}
+<li class="task {{if eq .Status "done"}}done{{end}}">
+  <form method="post" action="/tasks/{{.ID}}/status" class="inline">
+    <input type="hidden" name="status" value="{{if eq .Status "done"}}pending{{else}}done{{end}}">
+    <button type="submit" class="check" aria-label="{{if eq .Status "done"}}Batalkan selesai{{else}}Tandai selesai{{end}}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </button>
+  </form>
+  <div class="task-main">
+    <a href="/tasks/{{.ID}}" class="task-title">{{.Title}}</a>
+    <div class="task-meta">
+      {{if .ProjectName}}<span class="tag" style="--c:{{.ProjectColor}}">{{.ProjectName}}</span>{{end}}
+      {{if .Deadline}}<span class="when {{if late .Deadline .Status}}late{{end}}">{{when .Deadline}}</span>{{end}}
+      {{if or (eq .Priority "urgent") (eq .Priority "high")}}<span class="prio prio-{{.Priority}}">{{.Priority}}</span>{{end}}
+    </div>
+    {{if .Description}}<p class="task-desc">{{.Description}}</p>{{end}}
+  </div>
+</li>
+{{end}}
+
+{{define "quickadd"}}
+<button type="button" class="fab" aria-label="Tambah task" onclick="document.getElementById('quick-dialog').showModal()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+
+<dialog id="quick-dialog" class="quick-dialog">
+  <form method="post" action="/tasks" class="quick-dialog-form">
+    <input type="hidden" name="redirect" value="{{.}}">
+    <div class="quick-dialog-head">
+      <h2>Task baru</h2>
+      <button type="button" class="icon" aria-label="Tutup" onclick="document.getElementById('quick-dialog').close()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <textarea name="input" rows="3" maxlength="500" placeholder="Ketik bebas... judul, deadline, prioritas, project otomatis terdeteksi" required autofocus></textarea>
+    <p class="hint">Contoh: "besok jam 10 call client ERP Unirama urgent"</p>
+    <button type="submit">Tambah</button>
+  </form>
+</dialog>
+<script>
+  (function () {
+    var dlg = document.getElementById('quick-dialog');
+    if (!dlg) return;
+    dlg.addEventListener('click', function (e) {
+      var r = dlg.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dlg.close();
+    });
+  })();
+</script>
+{{end}}
+
+{{define "authbrand"}}
+<div class="brand-mark">
+  <img class="logo-light" src="/static/icons/wordmark-light.png" alt="todo" width="160" height="53">
+  <img class="logo-dark" src="/static/icons/wordmark-dark.png" alt="" width="160" height="53" aria-hidden="true">
+</div>
+{{end}}
+
+{{define "appbar"}}
+<div class="appbar">
+  <span class="brand-mark brand-mark-sm">
+    <img class="logo-light" src="/static/icons/wordmark-light.png" alt="todo" width="78" height="26">
+    <img class="logo-dark" src="/static/icons/wordmark-dark.png" alt="" width="78" height="26" aria-hidden="true">
+  </span>
+</div>
+{{end}}

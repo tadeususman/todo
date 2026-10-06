@@ -158,13 +158,14 @@ func (c *Client) sendGemini(ctx context.Context, system, user string) (string, e
 		return "", err
 	}
 
-	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
-		c.cfg.GeminiModel, c.cfg.GeminiKey)
+	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent",
+		c.cfg.GeminiModel)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-goog-api-key", c.cfg.GeminiKey)
 	resp, err := c.http.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("gemini: %w", err)

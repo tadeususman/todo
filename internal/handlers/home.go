@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	authmw "todo/internal/middleware"
@@ -16,7 +17,7 @@ func (a *App) HomePage(w http.ResponseWriter, r *http.Request) {
 
 	all, err := task.ListOpen(r.Context(), a.DB, uid)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 
@@ -37,11 +38,25 @@ func (a *App) HomePage(w http.ResponseWriter, r *http.Request) {
 			today = append(today, t)
 		}
 	}
+	done, err := task.ListDoneBetween(r.Context(), a.DB, uid, startToday, endToday)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	// ring progres: selesai hari ini / (selesai + masih terbuka hari ini + terlewat)
+	total := len(done) + len(today) + len(overdue)
+	percent := 0
+	if total > 0 {
+		percent = len(done) * 100 / total
+	}
 	a.render(w, r, "home.html", map[string]any{
 		"Nav":       "home",
 		"Username":  username,
-		"TodayDate": now.Format("Monday, 2 Jan 2006"),
+		"TodayDate": idDays[now.Weekday()] + ", " + strconv.Itoa(now.Day()) + " " + idMonths[now.Month()-1],
 		"Overdue":   overdue,
 		"Today":     today,
+		"Done":      done,
+		"Percent":   percent,
+		"HasRing":   total > 0,
 	})
 }

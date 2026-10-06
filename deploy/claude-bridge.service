@@ -1,0 +1,22 @@
+# systemd USER service untuk claude-bridge (dipakai app todo lewat host.docker.internal:8765).
+# Pasang:
+#   mkdir -p ~/.config/systemd/user
+#   cp deploy/claude-bridge.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now claude-bridge
+# Log: journalctl --user -u claude-bridge -f
+[Unit]
+Description=Claude Bridge (HTTP -> claude -p)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h
+# PATH harus memuat claude (~/.local/bin) dan python3 (pyenv)
+Environment=PATH=%h/.pyenv/shims:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/env python3 %h/claude-bridge.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

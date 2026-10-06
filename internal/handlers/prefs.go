@@ -14,7 +14,7 @@ func (a *App) PrefsSetTheme(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := prefs.SetTheme(r.Context(), a.DB, uid, r.FormValue("theme")); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 	http.Redirect(w, r, "/settings", http.StatusSeeOther)
@@ -27,7 +27,7 @@ func (a *App) PrefsSetFont(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := prefs.SetFont(r.Context(), a.DB, uid, r.FormValue("font")); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 	http.Redirect(w, r, "/settings", http.StatusSeeOther)

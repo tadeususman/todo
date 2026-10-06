@@ -16,11 +16,11 @@ type Config struct {
 	AdminUsername string
 	AdminPassword string
 
-	AIProvider   string
-	BridgeURL    string
-	BridgeModel  string
-	GeminiKey    string
-	GeminiModel  string
+	AIProvider  string
+	BridgeURL   string
+	BridgeModel string
+	GeminiKey   string
+	GeminiModel string
 }
 
 func Load() Config {

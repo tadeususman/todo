@@ -1,17 +1,13 @@
 {{define "content"}}
 <div class="auth-container">
-  <div class="brand">
-    <div class="logo">
-      {{template "icon-check" .}}
-    </div>
-    <h1>todo</h1>
-  </div>
+  {{template "authbrand"}}
 
   {{if .Error}}<div class="error">{{.Error}}</div>{{end}}
+  {{if .Info}}<div class="info">{{.Info}}</div>{{end}}
 
-  <form method="post" action="/login" class="stack">
+  <form method="post" action="/login" class="stack" novalidate data-validate>
     <label class="field">
-      <span>Username</span>
+      <span>Username atau email</span>
       <input type="text" name="username" autocomplete="username" required autofocus>
     </label>
     <label class="field">
@@ -20,6 +16,7 @@
     </label>
     <button type="submit">Masuk</button>
   </form>
+  <p class="auth-alt">Belum punya akun? <a href="/register">Daftar</a></p>
 </div>
 
 <script>document.body.classList.add('auth')</script>

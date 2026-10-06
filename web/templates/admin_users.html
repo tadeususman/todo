@@ -1,0 +1,41 @@
+{{define "content"}}
+<header class="detail-top">
+  <a href="/settings" class="back-link" aria-label="Kembali">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+    Setting
+  </a>
+</header>
+
+<header class="hero">
+  <div>
+    <p class="eyebrow">Admin</p>
+    <h1>User</h1>
+  </div>
+  <span class="hero-count{{if .Pending}} hero-count-warn{{end}}">{{if .Pending}}{{.Pending}} menunggu{{else}}Tidak ada pendaftar baru{{end}}</span>
+</header>
+
+<ul class="user-list">
+  {{range .Users}}
+  <li class="user-row">
+    <div class="user-main">
+      <span class="user-name">{{.Username}}</span>
+      {{if .Email}}<span class="user-meta">{{.Email}}</span>{{end}}
+      <span class="user-meta">
+        <span class="user-status st-{{.Status}}">{{if .IsAdmin}}admin{{else if eq .Status "pending"}}menunggu{{else if eq .Status "approved"}}aktif{{else}}ditolak{{end}}</span>
+        · daftar {{(wib .CreatedAt).Format "02 Jan 2006, 15:04"}}
+      </span>
+    </div>
+    {{if not .IsAdmin}}
+    <div class="user-actions">
+      {{if ne .Status "approved"}}
+      <form method="post" action="/admin/users/{{.ID}}/approve" class="inline"><button type="submit" class="btn-primary">Setujui</button></form>
+      {{end}}
+      {{if ne .Status "rejected"}}
+      <form method="post" action="/admin/users/{{.ID}}/reject" class="inline" data-confirm="{{if eq .Status "approved"}}Nonaktifkan{{else}}Tolak{{end}} user {{.Username}}? Sesi loginnya akan diputus." data-confirm-ok="{{if eq .Status "approved"}}Nonaktifkan{{else}}Tolak{{end}}"><button type="submit" class="ghost">{{if eq .Status "approved"}}Nonaktifkan{{else}}Tolak{{end}}</button></form>
+      {{end}}
+    </div>
+    {{end}}
+  </li>
+  {{end}}
+</ul>
+{{end}}

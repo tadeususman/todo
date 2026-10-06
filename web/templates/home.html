@@ -1,78 +1,39 @@
 {{define "content"}}
-<header class="page-header">
-  <h1>Halo, {{.Username}}</h1>
-  <p class="subtitle">{{.TodayDate}}</p>
+{{template "appbar"}}
+<header class="hero">
+  <div>
+    <p class="eyebrow">Hari ini</p>
+    <h1>{{.TodayDate}}</h1>
+  </div>
+  {{if .HasRing}}
+  <div class="ring" style="--p:{{.Percent}}" role="img" aria-label="{{.Percent}} persen selesai"><span>{{.Percent}}%</span></div>
+  {{end}}
 </header>
 
-<div class="quickadd">
-  <form method="post" action="/tasks">
-    <textarea name="input" rows="2" placeholder="Tambah task cepat... ketik bebas, nanti otomatis dirapihkan" required></textarea>
-    <div class="quickadd-actions">
-      <span class="hint">Contoh: "besok meeting review PR jam 10 urgent"</span>
-      <button type="submit">Tambah</button>
-    </div>
-  </form>
-</div>
-
 {{if .Overdue}}
-<section class="section">
-  <h2 class="section-title">
-    <span>Lewat deadline</span>
-    <span class="count">{{len .Overdue}}</span>
-  </h2>
-  {{template "home-tasklist" .Overdue}}
+<section class="block">
+  <h2 class="block-title block-late"><span>Lewat deadline</span><span class="pill-count">{{len .Overdue}}</span></h2>
+  <ul class="tasklist">{{range .Overdue}}{{template "taskrow" .}}{{end}}</ul>
 </section>
 {{end}}
 
-<section class="section">
-  <h2 class="section-title">
-    <span>Hari ini</span>
-    {{if .Today}}<span class="count">{{len .Today}}</span>{{end}}
-  </h2>
+<section class="block">
   {{if .Today}}
-    {{template "home-tasklist" .Today}}
-  {{else}}
-    <div class="empty">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
-      <p>Gak ada task hari ini. Enjoy!</p>
-    </div>
+  <ul class="tasklist">{{range .Today}}{{template "taskrow" .}}{{end}}</ul>
+  {{else if not .Overdue}}
+  <div class="empty">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+    <p>{{if .Done}}Semua selesai. Mantap!{{else}}Belum ada task hari ini. Tap + untuk menambah.{{end}}</p>
+  </div>
   {{end}}
+</section>
+
+{{if .Done}}
+<section class="block">
+  <h2 class="block-title"><span>Selesai</span><span class="pill-count">{{len .Done}}</span></h2>
+  <ul class="tasklist">{{range .Done}}{{template "taskrow" .}}{{end}}</ul>
 </section>
 {{end}}
 
-{{define "home-tasklist"}}
-<ul class="tasklist">
-  {{range .}}
-  <li class="task">
-    <div class="task-check">
-      <form method="post" action="/tasks/{{.ID}}/status" class="inline">
-        <input type="hidden" name="status" value="done">
-        <button type="submit" title="Tandai selesai">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        </button>
-      </form>
-    </div>
-    <div class="task-main">
-      <a href="/tasks/{{.ID}}" class="task-title">{{.Title}}</a>
-      <div class="task-meta">
-        {{if .ProjectName}}<span class="project-badge"><span class="dot" style="background:{{.ProjectColor}}"></span>{{.ProjectName}}</span>{{end}}
-        <span class="dot p-{{.Priority}}"></span>
-        <span>{{.Priority}}</span>
-        {{if .Deadline}}
-        <span class="deadline">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          {{.Deadline.Format "15:04"}}
-        </span>
-        {{end}}
-        {{if .EstimatedMinutes}}<span>~{{.EstimatedMinutes}} mnt</span>{{end}}
-      </div>
-    </div>
-    <form method="post" action="/tasks/{{.ID}}/delete" class="inline" data-confirm="Hapus task ini?">
-      <button type="submit" class="task-action-del" title="Hapus">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
-      </button>
-    </form>
-  </li>
-  {{end}}
-</ul>
+{{template "quickadd" "/home"}}
 {{end}}

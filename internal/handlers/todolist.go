@@ -9,6 +9,7 @@ import (
 	"todo/internal/prefs"
 	"todo/internal/project"
 	"todo/internal/task"
+	"todo/internal/user"
 )
 
 var projectColorPalette = []string{
@@ -56,7 +57,7 @@ func (a *App) TodoListPage(w http.ResponseWriter, r *http.Request) {
 	projects, _ := project.List(r.Context(), a.DB, uid)
 	open, err := task.ListOpen(r.Context(), a.DB, uid)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 	done, _ := task.ListRecentDone(r.Context(), a.DB, uid, 15)
@@ -142,14 +143,20 @@ func (a *App) TodoListPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) SettingsPage(w http.ResponseWriter, r *http.Request) {
+	a.renderSettings(w, r, http.StatusOK, "", "")
+}
+
+// renderSettings renders the settings page, optionally with an error/info banner.
+func (a *App) renderSettings(w http.ResponseWriter, r *http.Request, status int, errMsg, info string) {
 	uid := authmw.UserID(r)
 	projects, err := project.List(r.Context(), a.DB, uid)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 	p, _ := prefs.Get(r.Context(), a.DB, uid)
-	a.render(w, r, "settings.html", map[string]any{
+	me, _ := user.Get(r.Context(), a.DB, uid)
+	data := map[string]any{
 		"Nav":           "settings",
 		"Projects":      projects,
 		"DefaultName":   project.DefaultName,
@@ -158,5 +165,18 @@ func (a *App) SettingsPage(w http.ResponseWriter, r *http.Request) {
 		"CurrentFont":   p.Font,
 		"ThemeChoices":  themeChoices,
 		"FontChoices":   fontChoices,
-	})
+		"Error":         errMsg,
+		"Info":          info,
+		"ArchivedCount": task.CountArchived(r.Context(), a.DB, uid),
+	}
+	if me != nil {
+		data["Username"] = me.Username
+		data["Email"] = me.Email
+		data["IsAdmin"] = me.IsAdmin
+		if me.IsAdmin {
+			data["PendingCount"] = user.PendingCount(r.Context(), a.DB)
+		}
+	}
+	data["_status"] = status
+	a.render(w, r, "settings.html", data)
 }

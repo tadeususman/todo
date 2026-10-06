@@ -1,0 +1,40 @@
+{{define "content"}}
+<header class="detail-top">
+  <a href="/settings" class="back-link" aria-label="Kembali">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+    Setting
+  </a>
+</header>
+
+<header class="hero">
+  <div>
+    <p class="eyebrow">Tersimpan</p>
+    <h1>Arsip</h1>
+  </div>
+  <span class="hero-count">{{len .Tasks}} task</span>
+</header>
+
+{{if not .Tasks}}
+<div class="empty">
+  <p>Arsip kosong. Task yang kamu arsipkan lewat menu &middot;&middot;&middot; akan muncul di sini.</p>
+</div>
+{{else}}
+<ul class="tasklist">
+  {{range .Tasks}}
+  <li class="task archived-row {{if eq .Status "done"}}done{{end}}">
+    <div class="task-main">
+      <a href="/tasks/{{.ID}}" class="task-title">{{.Title}}</a>
+      <div class="task-meta">
+        {{if .ProjectName}}<span class="tag" style="--c:{{.ProjectColor}}">{{.ProjectName}}</span>{{end}}
+        {{if eq .Status "done"}}<span class="when">Selesai</span>{{end}}
+      </div>
+    </div>
+    <form method="post" action="/tasks/{{.ID}}/unarchive" class="inline">
+      <input type="hidden" name="redirect" value="/archive">
+      <button type="submit" class="set-btn ghost">Pulihkan</button>
+    </form>
+  </li>
+  {{end}}
+</ul>
+{{end}}
+{{end}}

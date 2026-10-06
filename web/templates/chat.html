@@ -1,12 +1,14 @@
 {{define "content"}}
-<header class="page-header chat-header">
+<header class="hero">
   <div>
+    <p class="eyebrow">Asisten</p>
     <h1>Chat</h1>
-    <p class="subtitle">Tanya apa aja tentang task kamu</p>
   </div>
   {{if .Messages}}
-  <form method="post" action="/chat/clear" class="inline" data-confirm="Hapus semua chat?">
-    <button type="submit" class="link-danger">Bersihkan</button>
+  <form method="post" action="/chat/clear" class="inline" data-confirm="Hapus semua chat?" data-confirm-ok="Bersihkan">
+    <button type="submit" class="icon-btn" aria-label="Bersihkan chat" title="Bersihkan chat">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 22-1-4"/><path d="M19 13.99a1 1 0 0 0 1-1V12a2 2 0 0 0-2-2h-3a1 1 0 0 1-1-1V4a2 2 0 0 0-4 0v5a1 1 0 0 1-1 1H6a2 2 0 0 0-2 2v.99a1 1 0 0 0 1 1"/><path d="M5 14h14l1.973 6.767A1 1 0 0 1 20 22H4a1 1 0 0 1-.973-1.233z"/><path d="m8 22 1-4"/></svg>
+    </button>
   </form>
   {{end}}
 </header>
@@ -121,7 +123,7 @@
       </button>
     </form>
   </div>
-  <div class="msg-time">{{.CreatedAt.Format "15:04"}}</div>
+  <div class="msg-time">{{(wib .CreatedAt).Format "15:04"}}</div>
 </div>
 {{end}}
 

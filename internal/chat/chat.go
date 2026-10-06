@@ -64,3 +64,16 @@ func Clear(ctx context.Context, db *sql.DB, userID int64) error {
 	_, err := db.ExecContext(ctx, `DELETE FROM chat_messages WHERE user_id = $1`, userID)
 	return err
 }
+
+// Get returns a single message owned by the user.
+func Get(ctx context.Context, db *sql.DB, userID, id int64) (*Message, error) {
+	var m Message
+	err := db.QueryRowContext(ctx, `
+		SELECT id, user_id, role, content, created_at
+		FROM chat_messages WHERE id = $1 AND user_id = $2`,
+		id, userID).Scan(&m.ID, &m.UserID, &m.Role, &m.Content, &m.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &m, nil
+}

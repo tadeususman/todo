@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -42,7 +43,7 @@ func (a *App) ChatSend(w http.ResponseWriter, r *http.Request) {
 
 	userID, err := chat.Save(r.Context(), a.DB, uid, chat.RoleUser, input)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 
@@ -56,34 +57,19 @@ func (a *App) ChatSend(w http.ResponseWriter, r *http.Request) {
 
 	reply, err := a.LLM.Chat(r.Context(), username, history, input, tasks, projects)
 	if err != nil {
-		reply = "Maaf, lagi error: " + err.Error()
+		log.Printf("chat llm: %v", err)
+		reply = "Maaf, asisten lagi tidak bisa dihubungi. Coba lagi sebentar."
 	}
 	assistantID, _ := chat.Save(r.Context(), a.DB, uid, chat.RoleAssistant, reply)
 
 	// JS fetch mode → return HTML snippet of both bubbles so client can replace optimistic + typing
 	if r.Header.Get("X-Chat-Fetch") == "1" {
-		userMsg, _ := chat.List(r.Context(), a.DB, uid, 1000)
-		var um, am *chat.Message
-		for i := range userMsg {
-			switch userMsg[i].ID {
-			case userID:
-				m := userMsg[i]
-				um = &m
-			case assistantID:
-				m := userMsg[i]
-				am = &m
-			}
-		}
+		um, _ := chat.Get(r.Context(), a.DB, uid, userID)
+		am, _ := chat.Get(r.Context(), a.DB, uid, assistantID)
 		data := map[string]any{"User": um, "Assistant": am}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		// Clone so direct execute of chat-pair doesn't lock a.Tmpl from future Clones.
-		t, err := a.Tmpl.Clone()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if err := t.ExecuteTemplate(w, "chat-pair", data); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		if err := a.Pages["chat.html"].ExecuteTemplate(w, "chat-pair", data); err != nil {
+			serverError(w, err)
 		}
 		return
 	}
@@ -99,7 +85,7 @@ func (a *App) ChatDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := chat.Delete(r.Context(), a.DB, uid, id); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 	http.Redirect(w, r, "/chat", http.StatusSeeOther)
@@ -108,7 +94,7 @@ func (a *App) ChatDelete(w http.ResponseWriter, r *http.Request) {
 func (a *App) ChatClear(w http.ResponseWriter, r *http.Request) {
 	uid := authmw.UserID(r)
 	if err := chat.Clear(r.Context(), a.DB, uid); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 	http.Redirect(w, r, "/chat", http.StatusSeeOther)

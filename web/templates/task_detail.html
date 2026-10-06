@@ -1,211 +1,303 @@
 {{define "content"}}
 {{with .Task}}
-<header class="page-header detail-header">
-  <a href="/home" class="back-link">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg>
+<header class="detail-top">
+  <a href="{{if .ParentID}}/tasks/{{.ParentID}}{{else}}/home{{end}}" class="back-link" id="back-link" data-sub="{{if .ParentID}}1{{end}}" aria-label="Kembali">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
     Kembali
   </a>
-  <div class="detail-badges">
-    {{if .ProjectName}}
-    <span class="project-badge"><span class="dot" style="background:{{.ProjectColor}}"></span>{{.ProjectName}}</span>
-    {{end}}
-    <span class="status-badge status-{{.Status}}">{{.Status}}</span>
-  </div>
+  <span class="save-state" id="save-state" aria-live="polite"></span>
+  <button type="button" class="kebab" id="kebab" aria-haspopup="menu" aria-expanded="false" aria-label="Menu task" title="Menu">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.75"/><circle cx="12" cy="12" r="1.75"/><circle cx="19" cy="12" r="1.75"/></svg>
+  </button>
 </header>
 
-<!-- VIEW MODE (default) -->
-<article class="card detail-view" id="view-mode">
-  <div class="view-head">
-    <h1 class="view-title">{{.Title}}</h1>
-    <button type="button" class="ghost btn-edit" onclick="toggleEdit(true)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      Edit
+{{if $.Archived}}<div class="flash"><span>Task ini ada di arsip dan tidak tampil di daftar. Buka menu &middot;&middot;&middot; untuk memulihkannya.</span></div>{{end}}
+
+<form id="archive-form" method="post" action="/tasks/{{.ID}}/{{if $.Archived}}unarchive{{else}}archive{{end}}" hidden></form>
+<form id="delete-form" method="post" action="/tasks/{{.ID}}/delete" data-confirm="Hapus task ini secara permanen?" hidden>{{if .ParentID}}<input type="hidden" name="redirect" value="/tasks/{{.ParentID}}">{{end}}</form>
+
+<!-- Semua field tersimpan otomatis; tidak ada mode edit terpisah -->
+<form method="post" action="/tasks/{{.ID}}/edit" id="task-form" class="sheet">
+  <div class="title-row {{if eq .Status "done"}}is-done{{end}}" id="title-row">
+    <textarea name="title" class="sheet-title" rows="1" required maxlength="200" aria-label="Judul task">{{.Title}}</textarea>
+    <button type="button" class="round-check" id="done-check" role="checkbox" aria-checked="{{if eq .Status "done"}}true{{else}}false{{end}}" aria-label="Tandai selesai" title="Tandai selesai">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
     </button>
   </div>
 
-  {{if .Description}}
-  <div class="view-section">
-    <div class="view-label">Deskripsi</div>
-    <p class="view-description">{{.Description}}</p>
-  </div>
-  {{else}}
-  <div class="view-section view-empty">
-    <p>Belum ada deskripsi. Klik Edit untuk tambah.</p>
-  </div>
-  {{end}}
-
-  <div class="view-grid">
-    <div class="view-cell">
-      <div class="view-label">Prioritas</div>
-      <div class="view-value"><span class="dot p-{{.Priority}}"></span>{{.Priority}}</div>
-    </div>
-    <div class="view-cell">
-      <div class="view-label">Kompleksitas</div>
-      <div class="view-value">{{.Complexity}}</div>
-    </div>
-    <div class="view-cell">
-      <div class="view-label">Deadline</div>
-      <div class="view-value">{{if .Deadline}}{{.Deadline.Format "Mon 02 Jan 2006, 15:04"}}{{else}}<span class="view-muted">—</span>{{end}}</div>
-    </div>
-    <div class="view-cell">
-      <div class="view-label">Estimasi</div>
-      <div class="view-value">{{if .EstimatedMinutes}}~{{.EstimatedMinutes}} menit{{else}}<span class="view-muted">—</span>{{end}}</div>
-    </div>
-  </div>
-</article>
-
-<!-- EDIT MODE (hidden by default) -->
-<form method="post" action="/tasks/{{.ID}}/edit" class="card detail-form" id="edit-mode" hidden>
-  <label class="field field-title">
-    <span>Judul</span>
-    <input type="text" name="title" value="{{.Title}}" required maxlength="200">
-  </label>
-
-  <label class="field">
-    <span>Deskripsi</span>
-    <textarea name="description" rows="4" placeholder="Tambah detail, catatan, link...">{{.Description}}</textarea>
-  </label>
-
-  <div class="detail-row">
-    <label class="field">
-      <span>Prioritas</span>
-      <select name="priority">
-        {{range $.Priorities}}
-        <option value="{{.}}" {{if eq . $.Task.Priority}}selected{{end}}>{{.}}</option>
-        {{end}}
-      </select>
+  <div class="group">
+    <div class="row row-inline">
+    <label class="cell cell-dl">
+      <span class="row-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span class="sr">Deadline</span></span>
+      <span class="row-value">
+        <span class="dl-text" id="dl-text">{{if not $.DeadlineInput}}Deadline{{end}}</span>
+        <input type="datetime-local" name="deadline" value="{{$.DeadlineInput}}" class="dl-input" aria-label="Deadline">
+        {{if $.DeadlineInput}}<button type="button" class="pill-clear" data-clear="deadline" aria-label="Hapus deadline">&times;</button>{{end}}
+      </span>
     </label>
-    <label class="field">
-      <span>Kompleksitas</span>
-      <select name="complexity">
-        {{range $.Complexities}}
-        <option value="{{.}}" {{if eq . $.Task.Complexity}}selected{{end}}>{{.}}</option>
-        {{end}}
-      </select>
+    <label class="cell">
+      <span class="row-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span class="sr">Project</span></span>
+      <span class="row-value">
+        <span class="dot" style="background:{{if .ProjectColor}}{{.ProjectColor}}{{else}}var(--text-subtle){{end}}"></span>
+        <select name="project_id" aria-label="Project">
+          {{range $.Projects}}
+          <option value="{{.ID}}" data-color="{{.Color}}" {{if eq .ID $.SelectedProjectID}}selected{{end}}>{{.Name}}</option>
+          {{end}}
+        </select>
+      </span>
     </label>
-  </div>
-
-  <div class="detail-row">
-    <label class="field">
-      <span>Deadline</span>
-      <input type="datetime-local" name="deadline" value="{{$.DeadlineInput}}">
+    <label class="cell">
+      <span class="row-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg><span class="sr">Prioritas</span></span>
+      <span class="row-value">
+        <span class="dot p-{{.Priority}}"></span>
+        <select name="priority" aria-label="Prioritas">
+          {{range $.Priorities}}
+          <option value="{{.}}" {{if eq . $.Task.Priority}}selected{{end}}>{{.}}</option>
+          {{end}}
+        </select>
+      </span>
     </label>
-    <label class="field">
-      <span>Estimasi (menit)</span>
-      <input type="number" name="estimated_minutes" value="{{if .EstimatedMinutes}}{{.EstimatedMinutes}}{{end}}" min="1" placeholder="opsional">
+    <label class="cell">
+      <span class="row-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="sr">Kompleksitas</span></span>
+      <span class="row-value">
+        <select name="complexity" aria-label="Kompleksitas">
+          {{range $.Complexities}}
+          <option value="{{.}}" {{if eq . $.Task.Complexity}}selected{{end}}>{{.}}</option>
+          {{end}}
+        </select>
+      </span>
     </label>
-  </div>
-
-  <div class="detail-actions">
-    <button type="submit">Simpan perubahan</button>
-    <button type="button" class="ghost" onclick="toggleEdit(false)">Batal</button>
+    </div>
   </div>
 </form>
 
-<!-- always visible: project + action buttons (hidden in edit mode) -->
-<div id="view-actions">
-  <form method="post" action="/tasks/{{.ID}}/project" class="card">
-    <label class="field">
-      <span>Pindah project</span>
-      <div style="display:flex;gap:.5rem">
-        <select name="project_id" style="flex:1">
-          {{range $.Projects}}
-          <option value="{{.ID}}" {{if eq .ID $.SelectedProjectID}}selected{{end}}>{{.Name}}</option>
-          {{end}}
-        </select>
-        <button type="submit" class="ghost">Pindah</button>
-      </div>
-    </label>
-  </form>
-
-  <div class="detail-actions">
-    {{if ne .Status "in_progress"}}
-    <form method="post" action="/tasks/{{.ID}}/status" class="inline">
-      <input type="hidden" name="status" value="in_progress">
-      <button type="submit">Mulai kerjain</button>
-    </form>
-    {{end}}
-    {{if ne .Status "done"}}
-    <form method="post" action="/tasks/{{.ID}}/status" class="inline">
-      <input type="hidden" name="status" value="done">
-      <button type="submit" class="ghost">Tandai selesai</button>
-    </form>
-    {{else}}
-    <form method="post" action="/tasks/{{.ID}}/status" class="inline">
-      <input type="hidden" name="status" value="pending">
-      <button type="submit" class="ghost">Batalkan selesai</button>
-    </form>
-    {{end}}
-    <form method="post" action="/tasks/{{.ID}}/delete" class="inline" data-confirm="Hapus task ini?">
-      <button type="submit" class="danger">Hapus</button>
-    </form>
-  </div>
-</div>
-
-<section class="section" id="subtasks">
-  <h2 class="section-title">
-    <span>Breakdown</span>
-    {{if $.Subtasks}}<span class="count">{{$.SubtasksDone}} / {{len $.Subtasks}}</span>{{end}}
+<section class="sheet-section" id="subtasks">
+  <h2 class="sheet-label">
+    <span>Sub-task</span>
+    {{if $.Subtasks}}<span class="count">{{$.SubtasksDone}}/{{len $.Subtasks}}</span>{{end}}
   </h2>
+  {{if $.Subtasks}}<div class="progress"><span style="width:{{$.SubtaskPercent}}%"></span></div>{{end}}
 
-  <div class="quickadd quickadd-sub">
-    <form method="post" action="/tasks/{{.ID}}/subtasks">
-      <textarea name="input" rows="1" placeholder="Pecah jadi sub-task... ketik bebas" required></textarea>
-      <div class="quickadd-actions">
-        <span class="hint">Project ikut parent otomatis</span>
-        <button type="submit">Tambah</button>
-      </div>
-    </form>
-  </div>
-
-  {{if $.Subtasks}}
-  <ul class="tasklist">
+  <ul class="subs">
     {{range $.Subtasks}}
-    <li class="task {{if eq .Status "done"}}done{{end}}">
-      <div class="task-check">
-        <form method="post" action="/tasks/{{.ID}}/status" class="inline">
-          <input type="hidden" name="status" value="{{if eq .Status "done"}}pending{{else}}done{{end}}">
-          <button type="submit" title="{{if eq .Status "done"}}Batalkan selesai{{else}}Tandai selesai{{end}}">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          </button>
-        </form>
-      </div>
-      <div class="task-main">
-        <a href="/tasks/{{.ID}}" class="task-title">{{.Title}}</a>
-        <div class="task-meta">
-          <span class="dot p-{{.Priority}}"></span>
-          <span>{{.Priority}}</span>
-          {{if .Deadline}}
-          <span class="deadline">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            {{.Deadline.Format "02 Jan 15:04"}}
-          </span>
-          {{end}}
-          {{if .EstimatedMinutes}}<span>~{{.EstimatedMinutes}} mnt</span>{{end}}
-        </div>
-      </div>
-      <form method="post" action="/tasks/{{.ID}}/delete" class="inline" data-confirm="Hapus sub-task ini?">
-        <button type="submit" class="task-action-del" title="Hapus">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+    <li class="sub {{if eq .Status "done"}}done{{end}}">
+      <form method="post" action="/tasks/{{.ID}}/status" class="inline">
+        <input type="hidden" name="status" value="{{if eq .Status "done"}}pending{{else}}done{{end}}">
+        <input type="hidden" name="redirect" value="/tasks/{{$.Task.ID}}">
+        <button type="submit" class="sub-check" aria-label="{{if eq .Status "done"}}Batalkan selesai{{else}}Tandai selesai{{end}}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </button>
+      </form>
+      <a href="/tasks/{{.ID}}" class="sub-title">{{.Title}}</a>
+      <form method="post" action="/tasks/{{.ID}}/delete" class="inline" data-confirm="Hapus sub-task ini?">
+        <input type="hidden" name="redirect" value="/tasks/{{$.Task.ID}}">
+        <button type="submit" class="sub-del" aria-label="Hapus sub-task">&times;</button>
       </form>
     </li>
     {{end}}
   </ul>
-  {{end}}
+
+  <form method="post" action="/tasks/{{.ID}}/subtasks" class="sub-add">
+    <span class="sub-check sub-check-ghost" aria-hidden="true"></span>
+    <input type="text" name="input" maxlength="500" placeholder="Tambah sub-task…" autocomplete="off" required>
+  </form>
+</section>
+
+<section class="sheet-section">
+  <h2 class="sheet-label"><span>Catatan</span></h2>
+  <textarea name="description" form="task-form" class="sheet-notes" rows="3" placeholder="Tambah catatan…" aria-label="Catatan">{{.Description}}</textarea>
 </section>
 
 <script>
-  function toggleEdit(on) {
-    document.getElementById('view-mode').hidden = on;
-    document.getElementById('edit-mode').hidden = !on;
-    document.getElementById('view-actions').hidden = on;
-    if (on) {
-      var ta = document.querySelector('#edit-mode textarea');
-      if (ta) { ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length; }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  (function () {
+    var form = document.getElementById('task-form');
+    var state = document.getElementById('save-state');
+    var title = form.elements.title;
+    var timer, inflight = 0, lastTitle = title.value;
+
+    function grow(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+    document.querySelectorAll('.sheet-title, .sheet-notes').forEach(function (el) {
+      grow(el);
+      el.addEventListener('input', function () { grow(el); });
+    });
+    title.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); title.blur(); } });
+
+    // Tampilan ramah baca untuk deadline & estimasi
+    var dlIn = form.elements.deadline, dlText = document.getElementById('dl-text');
+    var done = {{if eq .Status "done"}}true{{else}}false{{end}};
+    var check = document.getElementById('done-check'), titleRow = document.getElementById('title-row');
+    var HARI = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+    var BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    function renderDeadline() {
+      var row = dlText.closest('.row');
+      if (!dlIn.value) { dlText.textContent = 'Deadline'; dlText.className = 'dl-text is-empty'; return; }
+      var d = new Date(dlIn.value), n = new Date();
+      var day = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - new Date(n.getFullYear(), n.getMonth(), n.getDate())) / 864e5);
+      var label = day === 0 ? 'Hari ini' : day === 1 ? 'Besok' : day === -1 ? 'Kemarin'
+        : HARI[d.getDay()] + ', ' + d.getDate() + ' ' + BLN[d.getMonth()] + (d.getFullYear() !== n.getFullYear() ? ' ' + d.getFullYear() : '');
+      var hh = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+      dlText.textContent = label + ' · ' + hh;
+      dlText.className = 'dl-text' + (!done && d < n ? ' overdue' : '');
     }
-  }
+    renderDeadline();
+    dlIn.addEventListener('change', renderDeadline);
+    dlText.closest('.cell').addEventListener('click', function (e) {
+      if (e.target.closest('.pill-clear')) return;
+      e.preventDefault();
+      try { dlIn.showPicker(); } catch (_) { dlIn.focus(); }
+    });
+
+    check.addEventListener('click', function () {
+      var next = !done;
+      done = next;
+      check.setAttribute('aria-checked', next);
+      titleRow.classList.toggle('is-done', next);
+      renderDeadline();
+      var body = new URLSearchParams({ status: next ? 'done' : 'pending' });
+      say('Menyimpan…');
+      fetch('/tasks/{{.ID}}/status', { method: 'POST', body: body, headers: { 'HX-Request': 'true' } })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); say(next ? 'Selesai' : 'Tersimpan'); setTimeout(function () { say(''); }, 1500); })
+        .catch(function () {
+          done = !next; check.setAttribute('aria-checked', done); titleRow.classList.toggle('is-done', done); renderDeadline();
+          say('Gagal menyimpan');
+        });
+    });
+
+    // Menu pilihan kustom (pengganti dropdown bawaan browser yang putih di tema gelap)
+    var menu = null;
+    function closeMenu() { if (menu) { menu.remove(); menu = null; } }
+    function openMenu(cell, sel) {
+      closeMenu();
+      menu = document.createElement('div');
+      menu.className = 'menu';
+      menu.setAttribute('role', 'listbox');
+      Array.prototype.forEach.call(sel.options, function (o) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'menu-item' + (o.selected ? ' on' : '');
+        b.setAttribute('role', 'option');
+        var dot = '';
+        if (sel.name === 'project_id') dot = '<span class="dot" style="background:' + (o.dataset.color || 'var(--text-subtle)') + '"></span>';
+        else if (sel.name === 'priority') dot = '<span class="dot p-' + o.value + '"></span>';
+        b.innerHTML = dot + '<span class="menu-text"></span><svg class="menu-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        b.querySelector('.menu-text').textContent = o.text;
+        b.addEventListener('click', function () {
+          closeMenu();
+          if (sel.value === o.value) return;
+          sel.value = o.value;
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        menu.appendChild(b);
+      });
+      document.body.appendChild(menu);
+      var r = cell.getBoundingClientRect();
+      var w = Math.max(r.width, 180);
+      menu.style.minWidth = w + 'px';
+      var left = Math.min(r.left, window.innerWidth - menu.offsetWidth - 12);
+      menu.style.left = Math.max(12, left) + 'px';
+      var below = r.bottom + 6;
+      menu.style.top = (below + menu.offsetHeight > window.innerHeight - 12 ? Math.max(12, r.top - menu.offsetHeight - 6) : below) + 'px';
+    }
+    document.querySelectorAll('.cell select').forEach(function (sel) {
+      var cell = sel.closest('.cell');
+      cell.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); menu ? closeMenu() : openMenu(cell, sel); });
+    });
+    document.addEventListener('click', closeMenu);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+    window.addEventListener('scroll', closeMenu, true);
+    // Menu "..." (Arsipkan / Hapus)
+    var kebab = document.getElementById('kebab');
+    var isSub = {{if .ParentID}}true{{else}}false{{end}};
+    var archived = {{if $.Archived}}true{{else}}false{{end}};
+    var ICON_ARCHIVE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>';
+    var ICON_TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>';
+    function openKebab() {
+      closeMenu();
+      var items = [];
+      if (!isSub) items.push({ label: archived ? 'Pulihkan dari arsip' : 'Arsipkan', icon: ICON_ARCHIVE, form: 'archive-form' });
+      items.push({ label: 'Hapus', icon: ICON_TRASH, form: 'delete-form', danger: true });
+      menu = document.createElement('div');
+      menu.className = 'menu';
+      menu.setAttribute('role', 'menu');
+      items.forEach(function (it) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'menu-item' + (it.danger ? ' danger' : '');
+        b.setAttribute('role', 'menuitem');
+        b.innerHTML = it.icon + '<span class="menu-text"></span>';
+        b.querySelector('.menu-text').textContent = it.label;
+        b.addEventListener('click', function (e) {
+          e.stopPropagation();
+          closeMenu();
+          kebab.setAttribute('aria-expanded', 'false');
+          document.getElementById(it.form).requestSubmit();
+        });
+        menu.appendChild(b);
+      });
+      document.body.appendChild(menu);
+      var r = kebab.getBoundingClientRect();
+      menu.style.minWidth = '190px';
+      menu.style.left = Math.max(12, r.right - menu.offsetWidth) + 'px';
+      menu.style.top = (r.bottom + 6) + 'px';
+      kebab.setAttribute('aria-expanded', 'true');
+    }
+    kebab.addEventListener('click', function (e) { e.stopPropagation(); if (menu) { closeMenu(); kebab.setAttribute('aria-expanded', 'false'); } else openKebab(); });
+
+    // Tombol Kembali: ke halaman asal (Home / Todo / Arsip), diingat selama sesi tab
+    (function () {
+      var back = document.getElementById('back-link');
+      if (!back || back.dataset.sub) return;
+      try {
+        var ref = document.referrer ? new URL(document.referrer) : null;
+        if (ref && ref.origin === location.origin && /^\/(home|todo|archive)(\/|$)/.test(ref.pathname)) {
+          sessionStorage.setItem('backTo', ref.pathname + ref.search);
+        }
+        var saved = sessionStorage.getItem('backTo');
+        if (saved && /^\/(home|todo|archive)(\/|\?|$)/.test(saved)) back.setAttribute('href', saved);
+      } catch (_) {}
+    })();
+
+    window.addEventListener('resize', closeMenu);
+
+    function say(t) { state.textContent = t; }
+    function save() {
+      clearTimeout(timer);
+      if (!title.value.trim()) { title.value = lastTitle; grow(title); return; }
+      lastTitle = title.value;
+      say('Menyimpan…');
+      inflight++;
+      fetch(form.action, { method: 'POST', body: new URLSearchParams(new FormData(form)), headers: { 'X-Requested-With': 'fetch' } })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); say('Tersimpan'); setTimeout(function () { if (!inflight) say(''); }, 1500); })
+        .catch(function () { say('Gagal menyimpan'); })
+        .finally(function () { inflight--; });
+    }
+    function later() { clearTimeout(timer); say('…'); timer = setTimeout(save, 700); }
+
+    form.addEventListener('change', function (e) {
+      if (e.target.name === 'project_id' || e.target.name === 'priority') {
+        // update warna dot di pill secara instan
+        var dot = e.target.closest('.cell').querySelector('.dot');
+        if (dot && e.target.name === 'priority') dot.className = 'dot p-' + e.target.value;
+        if (dot && e.target.name === 'project_id') dot.style.background = e.target.selectedOptions[0].dataset.color || 'var(--text-subtle)';
+      }
+      save();
+    });
+    title.addEventListener('input', later);
+    title.addEventListener('blur', save);
+    var notes = document.querySelector('.sheet-notes');
+    notes.addEventListener('input', later);
+    notes.addEventListener('blur', function () { if (timer) save(); });
+
+    document.querySelectorAll('[data-clear]').forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        e.preventDefault();
+        form.elements[b.dataset.clear].value = '';
+        renderDeadline();
+        b.remove();
+        save();
+      });
+    });
+  })();
 </script>
 {{end}}
 {{end}}

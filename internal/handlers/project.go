@@ -17,7 +17,7 @@ func (a *App) ProjectCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if _, err := project.Create(r.Context(), a.DB, uid, r.FormValue("name"), r.FormValue("color")); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		projectError(w, err)
 		return
 	}
 	http.Redirect(w, r, "/settings", http.StatusSeeOther)
@@ -35,7 +35,7 @@ func (a *App) ProjectRename(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := project.Rename(r.Context(), a.DB, uid, id, r.FormValue("name")); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		projectError(w, err)
 		return
 	}
 	http.Redirect(w, r, "/settings", http.StatusSeeOther)
@@ -49,7 +49,7 @@ func (a *App) ProjectDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := project.Delete(r.Context(), a.DB, uid, id); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		projectError(w, err)
 		return
 	}
 	http.Redirect(w, r, "/settings", http.StatusSeeOther)

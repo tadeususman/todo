@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
@@ -38,7 +38,7 @@ func main() {
 	}
 
 	var adminID int64
-	if err := pool.QueryRowContext(ctx, `SELECT id FROM users WHERE username = $1`, cfg.AdminUsername).Scan(&adminID); err != nil {
+	if err := pool.QueryRowContext(ctx, `SELECT id FROM users WHERE is_admin AND status = 'approved' ORDER BY id LIMIT 1`).Scan(&adminID); err != nil {
 		log.Fatalf("locate admin: %v", err)
 	}
 	if err := project.EnsureDefault(ctx, pool, adminID); err != nil {
@@ -49,6 +49,14 @@ func main() {
 	}
 
 	sessions := session.NewManager(pool)
+	go func() {
+		for {
+			if err := sessions.PurgeExpired(ctx); err != nil {
+				log.Printf("purge sessions: %v", err)
+			}
+			time.Sleep(time.Hour)
+		}
+	}()
 	aiClient := llm.New(llm.Config{
 		Provider:    cfg.AIProvider,
 		BridgeURL:   cfg.BridgeURL,
@@ -59,15 +67,18 @@ func main() {
 	tmpl := handlers.LoadTemplates("web/templates")
 
 	app := &handlers.App{
-		DB:       pool,
-		Sessions: sessions,
-		LLM:      aiClient,
-		Tmpl:     tmpl,
+		DB:         pool,
+		Sessions:   sessions,
+		LLM:        aiClient,
+		Limiter:    authmw.NewLoginLimiter(5, 15*time.Minute),
+		RegLimiter: authmw.NewLoginLimiter(5, time.Hour),
+		Pages:      tmpl,
 	}
 
 	r := chi.NewRouter()
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
+	r.Use(authmw.SameOrigin)
 
 	// static
 	fs := http.FileServer(http.Dir("web/static"))
@@ -93,6 +104,8 @@ func main() {
 	r.Get("/login", app.LoginPage)
 	r.Post("/login", app.LoginSubmit)
 	r.Post("/logout", app.Logout)
+	r.Get("/register", app.RegisterPage)
+	r.Post("/register", app.RegisterSubmit)
 
 	// authenticated
 	r.Group(func(r chi.Router) {
@@ -115,10 +128,24 @@ func main() {
 		r.Post("/tasks/{id}/status", app.TaskUpdateStatus)
 		r.Post("/tasks/{id}/project", app.TaskSetProject)
 		r.Post("/tasks/{id}/delete", app.TaskDelete)
+		r.Post("/tasks/{id}/archive", app.TaskArchive())
+		r.Post("/tasks/{id}/unarchive", app.TaskUnarchive())
+		r.Get("/archive", app.ArchivePage)
 
 		r.Post("/projects", app.ProjectCreate)
 		r.Post("/projects/{id}/rename", app.ProjectRename)
 		r.Post("/projects/{id}/delete", app.ProjectDelete)
+
+		r.Post("/account/username", app.AccountUsername)
+		r.Post("/account/email", app.AccountEmail)
+		r.Post("/account/password", app.AccountPassword)
+
+		r.Group(func(r chi.Router) {
+			r.Use(authmw.RequireAdmin(pool))
+			r.Get("/admin/users", app.AdminUsers)
+			r.Post("/admin/users/{id}/approve", app.AdminApprove())
+			r.Post("/admin/users/{id}/reject", app.AdminReject())
+		})
 
 		r.Post("/prefs/theme", app.PrefsSetTheme)
 		r.Post("/prefs/font", app.PrefsSetFont)
@@ -134,24 +161,28 @@ func main() {
 	}
 }
 
-// bootstrapAdmin ensures the single admin user exists.
-// If missing OR the stored hash doesn't match the env password, upsert a fresh bcrypt hash.
+// bootstrapAdmin guarantees there is at least one admin.
+// It does nothing if an admin already exists, so renaming the admin or changing its password
+// through the Setting page survives restarts and never resurrects an account from .env.
+// Otherwise it promotes the user named ADMIN_USERNAME (pre-multi-user databases), or creates it.
 func bootstrapAdmin(ctx context.Context, db *sql.DB, username, password string) error {
-	var existingHash string
-	err := db.QueryRowContext(ctx, `SELECT password_hash FROM users WHERE username = $1`, username).Scan(&existingHash)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+	var n int
+	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM users WHERE is_admin AND status = 'approved'`).Scan(&n); err != nil {
 		return err
 	}
-	if existingHash != "" && bcrypt.CompareHashAndPassword([]byte(existingHash), []byte(password)) == nil {
+	if n > 0 {
 		return nil
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
-	_, err = db.ExecContext(ctx, `
+	if _, err := db.ExecContext(ctx, `
 		INSERT INTO users (username, password_hash) VALUES ($1, $2)
-		ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash`,
-		username, string(hash))
+		ON CONFLICT DO NOTHING`, username, string(hash)); err != nil {
+		return err
+	}
+	_, err = db.ExecContext(ctx,
+		`UPDATE users SET is_admin = true, status = 'approved' WHERE lower(username) = lower($1)`, username)
 	return err
 }

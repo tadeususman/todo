@@ -1,0 +1,32 @@
+{{define "content"}}
+<div class="auth-container">
+  {{template "authbrand"}}
+  <h1 class="auth-title">Daftar</h1>
+
+  {{if .Error}}<div class="error">{{.Error}}</div>{{end}}
+
+  <form method="post" action="/register" class="stack" novalidate data-validate>
+    <label class="field">
+      <span>Username</span>
+      <input type="text" name="username" value="{{.Username}}" autocomplete="username" required autofocus minlength="3" maxlength="32" pattern="[a-zA-Z0-9][a-zA-Z0-9._\-]{2,31}" title="3–32 karakter: huruf, angka, titik, strip, underscore">
+    </label>
+    <label class="field">
+      <span>Email</span>
+      <input type="email" name="email" value="{{.Email}}" autocomplete="email" required maxlength="254">
+    </label>
+    <label class="field">
+      <span>Password</span>
+      <input type="password" name="password" autocomplete="new-password" required minlength="8" maxlength="72">
+    </label>
+    <label class="field">
+      <span>Ulangi password</span>
+      <input type="password" name="confirm" autocomplete="new-password" required minlength="8" maxlength="72">
+    </label>
+    <button type="submit">Daftar</button>
+  </form>
+  <p class="auth-alt">Sudah punya akun? <a href="/login">Masuk</a></p>
+  <p class="auth-alt">Akun baru perlu disetujui admin sebelum bisa dipakai.</p>
+</div>
+
+<script>document.body.classList.add('auth')</script>
+{{end}}

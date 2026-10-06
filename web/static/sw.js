@@ -1,7 +1,7 @@
 // Service worker — network-first for everything so updates propagate instantly.
 // Cache only used as offline fallback.
 
-const CACHE = 'todo-v12';
+const CACHE = 'todo-v39';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();

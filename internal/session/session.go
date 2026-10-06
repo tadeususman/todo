@@ -54,8 +54,10 @@ func (m *Manager) UserID(r *http.Request) (int64, bool) {
 		return 0, false
 	}
 	var userID int64
+	// Hanya user berstatus approved yang dianggap login (reject/revoke langsung memutus sesi).
 	err = m.db.QueryRowContext(r.Context(),
-		`SELECT user_id FROM sessions WHERE id = $1 AND expires_at > now()`,
+		`SELECT s.user_id FROM sessions s JOIN users u ON u.id = s.user_id
+		 WHERE s.id = $1 AND s.expires_at > now() AND u.status = 'approved'`,
 		c.Value).Scan(&userID)
 	if err != nil {
 		return 0, false
@@ -74,6 +76,22 @@ func (m *Manager) Destroy(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Unix(0, 0),
 		HttpOnly: true,
 	})
+}
+
+// DestroyOthers deletes all of the user's sessions except the one in the request cookie.
+func (m *Manager) DestroyOthers(ctx context.Context, r *http.Request, userID int64) error {
+	cur := ""
+	if c, err := r.Cookie(CookieName); err == nil {
+		cur = c.Value
+	}
+	_, err := m.db.ExecContext(ctx, `DELETE FROM sessions WHERE user_id = $1 AND id <> $2`, userID, cur)
+	return err
+}
+
+// PurgeExpired deletes expired session rows.
+func (m *Manager) PurgeExpired(ctx context.Context) error {
+	_, err := m.db.ExecContext(ctx, `DELETE FROM sessions WHERE expires_at <= now()`)
+	return err
 }
 
 func randomID() (string, error) {

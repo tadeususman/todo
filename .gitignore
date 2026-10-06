@@ -13,3 +13,6 @@ go.sum.bak
 *.gif
 .DS_Store
 Thumbs.db
+
+# app icons are needed at runtime (PWA manifest, favicon, login wordmark)
+!web/static/icons/*.png
