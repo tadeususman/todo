@@ -1753,3 +1753,12 @@ a:focus-visible, button:focus-visible, summary:focus-visible, .task:focus-within
 .check:focus-visible, .sub-check:focus-visible, .round-check:focus-visible, .fab:focus-visible, .icon-btn:focus-visible { border-radius: 50%; }
 .kebab:focus-visible { border-radius: 10px; }
 .task-title:focus-visible { outline-offset: 4px; }
+
+/* splash: animated logo, shown once per browser session */
+.splash { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; background: var(--bg); transition: opacity .4s ease; }
+.splash .brand-mark { margin: 0; }
+.splash.splash-out { opacity: 0; pointer-events: none; }
+body.splash-on { overflow: hidden; }
+
+/* loading overlay: looping logo replaces the spinner */
+.busy-logo { margin: 0 0 10px; }
