@@ -21,7 +21,7 @@
   </div>
   {{end}}
 
-  {{range .Messages}}{{template "chat-msg" .}}{{end}}
+  {{range .Items}}{{if .Day}}{{template "chat-day" .Day}}{{end}}{{template "chat-msg" .Msg}}{{end}}
 </div>
 
 <form method="post" action="/chat" class="chat-input">
@@ -34,7 +34,12 @@
 <script>
   (function () {
     var thread = document.getElementById('chat-thread');
-    if (thread) thread.scrollTop = thread.scrollHeight;
+    // The page (not .chat-thread) is what scrolls, so jump the window to the newest message.
+    function scrollBottom(smooth) {
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+    }
+    scrollBottom(false);
+    window.addEventListener('load', function () { scrollBottom(false); });
 
     var form = document.querySelector('.chat-input');
     if (!form) return;
@@ -62,10 +67,8 @@
           '<div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>' +
         '</div>';
       thread.insertAdjacentHTML('beforeend', html);
-      thread.scrollTop = thread.scrollHeight;
+      scrollBottom(true);
     }
-
-    function scrollBottom() { thread.scrollTop = thread.scrollHeight; }
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -76,7 +79,7 @@
       appendOptimisticUser(text, tempId);
       textarea.value = '';
       textarea.style.height = 'auto';
-      scrollBottom();
+      scrollBottom(true);
       appendTyping();
       sendBtn.disabled = true;
 
@@ -95,7 +98,7 @@
         var tmp = document.getElementById(tempId); if (tmp) tmp.remove();
         var typ = document.getElementById('typing-indicator'); if (typ) typ.remove();
         thread.insertAdjacentHTML('beforeend', html);
-        scrollBottom();
+        scrollBottom(true);
       }).catch(function (err) {
         var typ = document.getElementById('typing-indicator'); if (typ) typ.remove();
         var tmp = document.getElementById(tempId);
@@ -140,4 +143,6 @@
 </div>
 {{end}}
 
-{{define "chat-pair"}}{{with .User}}{{template "chat-msg" .}}{{end}}{{with .Assistant}}{{template "chat-msg" .}}{{end}}{{end}}
+{{define "chat-day"}}<div class="chat-day"><span>{{.}}</span></div>{{end}}
+
+{{define "chat-pair"}}{{if .Day}}{{template "chat-day" .Day}}{{end}}{{with .User}}{{template "chat-msg" .}}{{end}}{{with .Assistant}}{{template "chat-msg" .}}{{end}}{{end}}

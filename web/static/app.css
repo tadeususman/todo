@@ -1792,3 +1792,7 @@ body.bulk-on .fab { display: none; }
 .msg-actions-btns .act-apply { background: var(--accent-soft); color: var(--text); border-color: transparent; }
 .msg-actions-note { margin: .5rem 0 0; font-size: .8rem; color: var(--text-muted); }
 .msg-actions-dismissed li { opacity: .55; text-decoration: line-through; }
+
+/* chat: day separators, like WhatsApp */
+.chat-day { align-self: center; margin: .5rem 0 .1rem; }
+.chat-day span { display: inline-block; padding: .2rem .7rem; border-radius: 999px; background: var(--surface-alt); color: var(--text-muted); font-size: .72rem; font-weight: 600; }

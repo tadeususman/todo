@@ -35,16 +35,19 @@ func scanMessage(sc interface{ Scan(...any) error }) (Message, error) {
 	return m, nil
 }
 
+// List returns the most recent limit messages, oldest first.
 func List(ctx context.Context, db *sql.DB, userID int64, limit int) ([]Message, error) {
 	if limit <= 0 {
 		limit = 100
 	}
 	rows, err := db.QueryContext(ctx, `
-		SELECT `+msgCols+`
-		FROM chat_messages
-		WHERE user_id = $1
-		ORDER BY created_at ASC, id ASC
-		LIMIT $2`,
+		SELECT * FROM (
+			SELECT `+msgCols+`
+			FROM chat_messages
+			WHERE user_id = $1
+			ORDER BY created_at DESC, id DESC
+			LIMIT $2
+		) latest ORDER BY created_at ASC, id ASC`,
 		userID, limit)
 	if err != nil {
 		return nil, err

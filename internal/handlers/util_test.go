@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"todo/internal/chat"
 )
@@ -78,5 +79,42 @@ func TestChatMsgRendersActions(t *testing.T) {
 	m.Actions = nil
 	if out := render(m); strings.Contains(out, "msg-actions") {
 		t.Error("plain message shows action card")
+	}
+}
+
+func TestDayLabelAndChatItems(t *testing.T) {
+	at := func(y int, m time.Month, d, h, mi int) time.Time { return time.Date(y, m, d, h, mi, 0, 0, wibLoc) }
+	now := at(2026, time.October, 7, 15, 0)
+	cases := map[time.Time]string{
+		at(2026, time.October, 7, 0, 5):   "Hari ini",
+		at(2026, time.October, 6, 23, 59): "Kemarin",
+		at(2026, time.October, 5, 12, 0):  "Senin, 5 Okt",
+		at(2025, time.December, 31, 9, 0): "Rabu, 31 Des 2025",
+	}
+	for in, want := range cases {
+		if got := dayLabel(in, now); got != want {
+			t.Errorf("dayLabel(%v) = %q, want %q", in, got, want)
+		}
+	}
+	// 23:30 UTC on the 6th is already the 7th in WIB
+	if got := dayLabel(time.Date(2026, time.October, 6, 23, 30, 0, 0, time.UTC), now); got != "Hari ini" {
+		t.Errorf("UTC->WIB day: %q", got)
+	}
+
+	msgs := []chat.Message{
+		{ID: 1, CreatedAt: at(2026, time.October, 6, 9, 0)},
+		{ID: 2, CreatedAt: at(2026, time.October, 6, 23, 59)},
+		{ID: 3, CreatedAt: at(2026, time.October, 7, 0, 1)},
+		{ID: 4, CreatedAt: at(2026, time.October, 7, 8, 0)},
+	}
+	items := chatItems(msgs, now)
+	want := []string{"Kemarin", "", "Hari ini", ""}
+	for i, it := range items {
+		if it.Day != want[i] {
+			t.Errorf("item %d day = %q, want %q", i, it.Day, want[i])
+		}
+	}
+	if len(chatItems(nil, now)) != 0 {
+		t.Error("empty")
 	}
 }

@@ -88,6 +88,22 @@ func whenLabel(v any) string {
 	return label + " · " + clock
 }
 
+// dayLabel names a calendar day for chat separators: "Hari ini", "Kemarin", else "Senin, 5 Okt" (+ year if not this year).
+func dayLabel(t, now time.Time) string {
+	t, now = t.In(wibLoc), now.In(wibLoc)
+	switch int(dayStart(t).Sub(dayStart(now)).Hours() / 24) {
+	case 0:
+		return "Hari ini"
+	case -1:
+		return "Kemarin"
+	}
+	label := idDays[t.Weekday()] + ", " + strconv.Itoa(t.Day()) + " " + idMonths[t.Month()-1]
+	if t.Year() != now.Year() {
+		label += " " + strconv.Itoa(t.Year())
+	}
+	return label
+}
+
 // isLate reports whether an unfinished task is past its deadline.
 func isLate(v any, status string) bool {
 	t := toWIB(v)

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -14,6 +15,31 @@ import (
 	"todo/internal/project"
 	"todo/internal/task"
 )
+
+// chatItem is a message plus, when it opens a new calendar day (WIB), the separator label to show above it.
+type chatItem struct {
+	Msg chat.Message
+	Day string
+}
+
+func chatItems(msgs []chat.Message, now time.Time) []chatItem {
+	items := make([]chatItem, 0, len(msgs))
+	var prev time.Time
+	for _, m := range msgs {
+		it := chatItem{Msg: m}
+		if prev.IsZero() || !sameDay(prev, m.CreatedAt) {
+			it.Day = dayLabel(m.CreatedAt, now)
+		}
+		prev = m.CreatedAt
+		items = append(items, it)
+	}
+	return items
+}
+
+func sameDay(a, b time.Time) bool {
+	a, b = a.In(wibLoc), b.In(wibLoc)
+	return a.Year() == b.Year() && a.YearDay() == b.YearDay()
+}
 
 func (a *App) ChatPage(w http.ResponseWriter, r *http.Request) {
 	uid := authmw.UserID(r)
@@ -24,6 +50,7 @@ func (a *App) ChatPage(w http.ResponseWriter, r *http.Request) {
 		"Nav":      "chat",
 		"Username": username,
 		"Messages": msgs,
+		"Items":    chatItems(msgs, time.Now()),
 	})
 }
 
@@ -53,6 +80,11 @@ func (a *App) ChatSend(w http.ResponseWriter, r *http.Request) {
 	if n := len(history); n > 0 && history[n-1].Role == chat.RoleUser {
 		history = history[:n-1]
 	}
+	// the message before this one decides whether the reply bubble needs a new-day separator
+	var prevAt time.Time
+	if n := len(history); n > 0 {
+		prevAt = history[n-1].CreatedAt
+	}
 	tasks, _ := task.ListOpen(r.Context(), a.DB, uid)
 	projects, _ := project.List(r.Context(), a.DB, uid)
 
@@ -71,6 +103,9 @@ func (a *App) ChatSend(w http.ResponseWriter, r *http.Request) {
 		um, _ := chat.Get(r.Context(), a.DB, uid, userID)
 		am, _ := chat.Get(r.Context(), a.DB, uid, assistantID)
 		data := map[string]any{"User": um, "Assistant": am}
+		if um != nil && (prevAt.IsZero() || !sameDay(prevAt, um.CreatedAt)) {
+			data["Day"] = dayLabel(um.CreatedAt, time.Now())
+		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		if err := a.Pages["chat.html"].ExecuteTemplate(w, "chat-pair", data); err != nil {
 			serverError(w, err)
