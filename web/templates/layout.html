@@ -4,7 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="{{if eq .Theme "dark"}}dark{{else if eq .Theme "light"}}light{{else}}light dark{{end}}">
-  <meta name="theme-color" content="#ffffff">
+  {{if eq .Theme "dark"}}<meta name="theme-color" content="#0f172a">
+  {{else if eq .Theme "light"}}<meta name="theme-color" content="#f8fafc">
+  {{else}}<meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">{{end}}
   <title>todo</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
