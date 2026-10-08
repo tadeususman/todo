@@ -146,6 +146,7 @@ func main() {
 			r.Get("/admin/users", app.AdminUsers)
 			r.Post("/admin/users/{id}/approve", app.AdminApprove())
 			r.Post("/admin/users/{id}/reject", app.AdminReject())
+			r.Post("/admin/users/{id}/reset-password", app.AdminResetPassword)
 		})
 
 		r.Post("/prefs/theme", app.PrefsSetTheme)

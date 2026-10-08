@@ -1360,6 +1360,8 @@ body.theme-dark .msg-content code { background: rgba(255, 255, 255, 0.1); }
 .user-status.st-pending { color: var(--warn-text); }
 .user-status.st-approved { color: var(--accent-text); }
 .user-status.st-rejected { color: var(--danger-text); }
+.reset-result { margin: .375rem 0; padding: .625rem .75rem; border-radius: .625rem; background: var(--accent-soft, #e8f0fe); color: inherit; font-size: .875rem; }
+.reset-result code { font-size: 1rem; font-weight: 600; user-select: all; letter-spacing: .03em; }
 .user-actions { display: flex; gap: .5rem; }
 .user-actions button { padding: .4rem .875rem; font-size: .8125rem; }
 

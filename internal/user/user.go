@@ -3,6 +3,7 @@ package user
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
 	"errors"
 	"net/mail"
@@ -210,6 +211,36 @@ func ChangePassword(ctx context.Context, db *sql.DB, id int64, current, next str
 	}
 	_, err = db.ExecContext(ctx, `UPDATE users SET password_hash = $1 WHERE id = $2`, string(nh), id)
 	return err
+}
+
+const tempPasswordAlphabet = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+// ResetPassword (oleh admin) mengganti password user non-admin dengan password sementara acak,
+// memutus semua sesinya, dan mengembalikan password itu sekali saja.
+func ResetPassword(ctx context.Context, db *sql.DB, id int64) (string, error) {
+	buf := make([]byte, 12)
+	if _, err := rand.Read(buf); err != nil {
+		return "", err
+	}
+	pw := make([]byte, len(buf))
+	for i, b := range buf {
+		pw[i] = tempPasswordAlphabet[int(b)%len(tempPasswordAlphabet)]
+	}
+	h, err := bcrypt.GenerateFromPassword(pw, bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	res, err := db.ExecContext(ctx, `UPDATE users SET password_hash = $1 WHERE id = $2 AND is_admin = false`, string(h), id)
+	if err != nil {
+		return "", err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return "", ErrNotFound
+	}
+	if _, err := db.ExecContext(ctx, `DELETE FROM sessions WHERE user_id = $1`, id); err != nil {
+		return "", err
+	}
+	return string(pw), nil
 }
 
 // List returns all users, pending first, then newest.
