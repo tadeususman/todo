@@ -65,6 +65,9 @@ body.font-geist    { --font-ui: 'Geist', -apple-system, BlinkMacSystemFont, 'Seg
 
 /* ------- dark theme ------- */
 /* Explicit dark */
+body.theme-dark { color-scheme: dark; }
+body.theme-light { color-scheme: light; }
+@media (prefers-color-scheme: dark) { body.theme-system { color-scheme: dark; } }
 body.theme-dark {
   --bg: #0f172a;
   --surface: #1e293b;
@@ -866,8 +869,19 @@ body.theme-dark .fab { box-shadow: 0 6px 20px rgba(52, 211, 153, 0.25); }
   color: var(--accent-text);
   cursor: pointer;
 }
-.qd-cancel { justify-self: start; }
-.qd-add { justify-self: end; font-weight: 600 !important; }
+.qd-close { justify-self: end; display: inline-flex; color: var(--text-muted) !important; }
+.qd-add {
+  margin-top: 1rem;
+  padding: .75rem;
+  border: none;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.qd-add:hover { background: var(--accent-hover); }
 .qd-add:disabled { opacity: .5; }
 .quick-dialog textarea {
   display: block;
@@ -915,6 +929,7 @@ body.theme-dark .fab { box-shadow: 0 6px 20px rgba(52, 211, 153, 0.25); }
   cursor: pointer;
 }
 .qd-opt select:focus, .qd-opt input:focus { outline: none; border: none; box-shadow: none; }
+.qd-opt select option { background: var(--surface); color: var(--text); }
 .qd-opt:focus-within { box-shadow: 0 0 0 2px var(--accent-strong); }
 
 /* ------- task detail: seamless sheet ------- */

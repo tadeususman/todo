@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="48x48" href="/static/icons/favicon-48.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="/static/app.css?v=57">
+  <link rel="stylesheet" href="/static/app.css?v=59">
   {{if ne .Font "system"}}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -291,9 +291,11 @@
   <form method="post" action="/tasks" class="quick-dialog-form">
     <input type="hidden" name="redirect" value="{{.R}}">
     <div class="quick-dialog-head">
-      <button type="button" class="qd-cancel" onclick="document.getElementById('quick-dialog').close()">Batal</button>
+      <span></span>
       <h2>Task baru</h2>
-      <button type="submit" class="qd-add">Tambah</button>
+      <button type="button" class="qd-close" aria-label="Tutup" onclick="document.getElementById('quick-dialog').close()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" width="20" height="20"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+      </button>
     </div>
     <div class="set-group">
       <textarea name="input" rows="3" maxlength="500" placeholder="Ketik bebas… judul, deadline, prioritas, project otomatis terdeteksi" aria-label="Uraian task" required autofocus></textarea>
@@ -323,6 +325,7 @@
       </label>
     </div>
     <p class="qd-foot">Opsional — membantu AI lebih akurat. Kosongkan untuk deteksi otomatis.</p>
+    <button type="submit" class="qd-add">Tambah</button>
   </form>
 </dialog>
 <script>
