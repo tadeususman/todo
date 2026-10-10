@@ -291,22 +291,26 @@
   <form method="post" action="/tasks" class="quick-dialog-form">
     <input type="hidden" name="redirect" value="{{.R}}">
     <div class="quick-dialog-head">
+      <button type="button" class="qd-cancel" onclick="document.getElementById('quick-dialog').close()">Batal</button>
       <h2>Task baru</h2>
-      <button type="button" class="icon" aria-label="Tutup" onclick="document.getElementById('quick-dialog').close()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+      <button type="submit" class="qd-add">Tambah</button>
     </div>
-    <textarea name="input" rows="3" maxlength="500" placeholder="Ketik bebas... judul, deadline, prioritas, project otomatis terdeteksi" required autofocus></textarea>
-    <p class="hint">Contoh: "besok jam 10 call client ERP Unirama urgent"</p>
-    <div class="quick-opts">
-      <label>Project
-        <select name="project_id">
+    <div class="set-group">
+      <textarea name="input" rows="3" maxlength="500" placeholder="Ketik bebas… judul, deadline, prioritas, project otomatis terdeteksi" aria-label="Uraian task" required autofocus></textarea>
+    </div>
+    <p class="qd-foot">Contoh: "besok jam 10 call client ERP Unirama urgent"</p>
+    <p class="qd-title">Opsional · bantu AI lebih akurat</p>
+    <div class="set-group">
+      <label class="set-row">
+        <span class="set-label">Project</span>
+        <select name="project_id" class="qd-select">
           <option value="">Otomatis</option>
           {{range .Projects}}<option value="{{.ID}}">{{.Name}}</option>{{end}}
         </select>
       </label>
-      <label>Urgensi
-        <select name="priority">
+      <label class="set-row">
+        <span class="set-label">Urgensi</span>
+        <select name="priority" class="qd-select">
           <option value="">Otomatis</option>
           <option value="low">Low</option>
           <option value="medium">Medium</option>
@@ -314,11 +318,11 @@
           <option value="urgent">Urgent</option>
         </select>
       </label>
-      <label class="quick-opts-wide">Deadline
-        <input type="datetime-local" name="deadline">
+      <label class="set-row">
+        <span class="set-label">Deadline</span>
+        <input type="datetime-local" name="deadline" class="qd-select">
       </label>
     </div>
-    <button type="submit">Tambah</button>
   </form>
 </dialog>
 <script>
