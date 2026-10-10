@@ -298,19 +298,18 @@
     <div class="set-group">
       <textarea name="input" rows="3" maxlength="500" placeholder="Ketik bebas… judul, deadline, prioritas, project otomatis terdeteksi" aria-label="Uraian task" required autofocus></textarea>
     </div>
-    <p class="qd-foot">Contoh: "besok jam 10 call client ERP Unirama urgent"</p>
-    <p class="qd-title">Opsional · bantu AI lebih akurat</p>
-    <div class="set-group">
-      <label class="set-row">
-        <span class="set-label">Project</span>
-        <select name="project_id" class="qd-select">
+    <p class="qd-hint">Contoh: "besok jam 10 call client ERP Unirama urgent"</p>
+    <div class="qd-opts">
+      <label class="qd-opt">
+        <span>Project</span>
+        <select name="project_id">
           <option value="">Otomatis</option>
           {{range .Projects}}<option value="{{.ID}}">{{.Name}}</option>{{end}}
         </select>
       </label>
-      <label class="set-row">
-        <span class="set-label">Urgensi</span>
-        <select name="priority" class="qd-select">
+      <label class="qd-opt">
+        <span>Urgensi</span>
+        <select name="priority">
           <option value="">Otomatis</option>
           <option value="low">Low</option>
           <option value="medium">Medium</option>
@@ -318,11 +317,12 @@
           <option value="urgent">Urgent</option>
         </select>
       </label>
-      <label class="set-row">
-        <span class="set-label">Deadline</span>
-        <input type="datetime-local" name="deadline" class="qd-select">
+      <label class="qd-opt qd-opt-date">
+        <span>Deadline</span>
+        <input type="datetime-local" name="deadline">
       </label>
     </div>
+    <p class="qd-foot">Opsional — membantu AI lebih akurat. Kosongkan untuk deteksi otomatis.</p>
   </form>
 </dialog>
 <script>

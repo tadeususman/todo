@@ -875,6 +875,7 @@ body.theme-dark .fab { box-shadow: 0 6px 20px rgba(52, 211, 153, 0.25); }
   min-height: 84px;
   padding: .875rem 1rem;
   border: none;
+  border-radius: 0;
   background: transparent;
   box-shadow: none;
   color: var(--text);
@@ -882,26 +883,39 @@ body.theme-dark .fab { box-shadow: 0 6px 20px rgba(52, 211, 153, 0.25); }
   font-size: 1rem;
   resize: none;
 }
-.quick-dialog textarea:focus { outline: none; }
-.qd-foot { margin: .5rem 0 1.25rem .25rem; font-size: .75rem; color: var(--text-subtle); }
-.qd-title { margin: 0 0 .5rem .25rem; font-size: .75rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); }
-.quick-dialog .set-row { cursor: pointer; }
-.qd-select {
-  flex: 1;
+.quick-dialog textarea:focus { outline: none; border: none; box-shadow: none; }
+.qd-hint { margin: .5rem 0 1rem .25rem; font-size: .75rem; color: var(--text-subtle); }
+.qd-foot { margin: .5rem 0 0 .25rem; font-size: .6875rem; color: var(--text-subtle); }
+
+/* satu baris: project · urgensi · deadline */
+.qd-opts { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: .5rem; }
+.qd-opt {
+  display: flex;
+  flex-direction: column;
+  gap: .125rem;
   min-width: 0;
-  width: auto;
-  padding: 0;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: .9375rem;
-  text-align: right;
-  text-align-last: right;
+  padding: .5rem .625rem;
+  background: var(--surface-alt);
+  border-radius: 12px;
   cursor: pointer;
 }
-.qd-select:focus { outline: none; }
+.qd-opt > span { font-size: .625rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-subtle); }
+.qd-opt select, .qd-opt input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text);
+  font: inherit;
+  font-size: .8125rem;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.qd-opt select:focus, .qd-opt input:focus { outline: none; border: none; box-shadow: none; }
+.qd-opt:focus-within { box-shadow: 0 0 0 2px var(--accent-strong); }
 
 /* ------- task detail: seamless sheet ------- */
 
