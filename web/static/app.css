@@ -873,6 +873,21 @@ body.theme-dark .fab { box-shadow: 0 6px 20px rgba(52, 211, 153, 0.25); }
   font-size: .75rem;
   color: var(--text-subtle);
 }
+.quick-opts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .625rem;
+}
+.quick-opts label {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  font-size: .75rem;
+  color: var(--text-subtle);
+  min-width: 0;
+}
+.quick-opts .quick-opts-wide { grid-column: 1 / -1; }
+.quick-opts select, .quick-opts input { width: 100%; font-size: .9375rem; }
 .quick-dialog button[type="submit"] { align-self: stretch; }
 
 /* ------- task detail: seamless sheet ------- */

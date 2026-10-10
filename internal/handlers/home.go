@@ -6,6 +6,7 @@ import (
 	"time"
 
 	authmw "todo/internal/middleware"
+	"todo/internal/project"
 	"todo/internal/task"
 )
 
@@ -49,8 +50,10 @@ func (a *App) HomePage(w http.ResponseWriter, r *http.Request) {
 	if total > 0 {
 		percent = len(done) * 100 / total
 	}
+	projects, _ := project.List(r.Context(), a.DB, uid)
 	a.render(w, r, "home.html", map[string]any{
 		"Nav":       "home",
+		"Projects":  projects,
 		"Username":  username,
 		"TodayDate": idDays[now.Weekday()] + ", " + strconv.Itoa(now.Day()) + " " + idMonths[now.Month()-1],
 		"Overdue":   overdue,

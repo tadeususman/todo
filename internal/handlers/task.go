@@ -57,7 +57,26 @@ func (a *App) TaskCreate(w http.ResponseWriter, r *http.Request) {
 		parsed = &task.Parsed{Title: input, Priority: "medium", Complexity: "simple"}
 	}
 
+	// Pilihan manual dari form menang atas hasil tebakan LLM.
+	switch pr := r.FormValue("priority"); pr {
+	case "low", "medium", "high", "urgent":
+		parsed.Priority = pr
+	}
+	if dl := strings.TrimSpace(r.FormValue("deadline")); dl != "" {
+		loc, _ := time.LoadLocation("Asia/Jakarta")
+		if t, err := time.ParseInLocation("2006-01-02T15:04", dl, loc); err == nil {
+			parsed.Deadline = &t
+		}
+	}
 	projectID := resolveProjectID(projects, parsed.Project)
+	if pid, err := strconv.ParseInt(r.FormValue("project_id"), 10, 64); err == nil {
+		for _, p := range projects {
+			if p.ID == pid {
+				projectID = pid
+				break
+			}
+		}
+	}
 	if projectID == 0 {
 		// no match → default
 		if id, err := project.DefaultID(ctx, a.DB, uid); err == nil {

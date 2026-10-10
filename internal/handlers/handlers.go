@@ -131,6 +131,14 @@ func LoadTemplates(dir string) map[string]*template.Template {
 		"wib":      toWIB,
 		"when":     whenLabel,
 		"late":     isLate,
+		"dict": func(kv ...any) map[string]any {
+			m := make(map[string]any, len(kv)/2)
+			for i := 0; i+1 < len(kv); i += 2 {
+				k, _ := kv[i].(string)
+				m[k] = kv[i+1]
+			}
+			return m
+		},
 	}).ParseFiles(filepath.Join(dir, "layout.html"))
 	if err != nil {
 		log.Fatalf("parse layout: %v", err)

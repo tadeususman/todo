@@ -109,7 +109,7 @@
   refresh();
 })();
 </script>
-{{template "quickadd" $r}}
+{{template "quickadd" (dict "R" $r "Projects" .Projects)}}
 {{end}}
 
 {{define "todo-tasklist"}}

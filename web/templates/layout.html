@@ -289,7 +289,7 @@
 
 <dialog id="quick-dialog" class="quick-dialog">
   <form method="post" action="/tasks" class="quick-dialog-form">
-    <input type="hidden" name="redirect" value="{{.}}">
+    <input type="hidden" name="redirect" value="{{.R}}">
     <div class="quick-dialog-head">
       <h2>Task baru</h2>
       <button type="button" class="icon" aria-label="Tutup" onclick="document.getElementById('quick-dialog').close()">
@@ -298,6 +298,26 @@
     </div>
     <textarea name="input" rows="3" maxlength="500" placeholder="Ketik bebas... judul, deadline, prioritas, project otomatis terdeteksi" required autofocus></textarea>
     <p class="hint">Contoh: "besok jam 10 call client ERP Unirama urgent"</p>
+    <div class="quick-opts">
+      <label>Project
+        <select name="project_id">
+          <option value="">Otomatis</option>
+          {{range .Projects}}<option value="{{.ID}}">{{.Name}}</option>{{end}}
+        </select>
+      </label>
+      <label>Urgensi
+        <select name="priority">
+          <option value="">Otomatis</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+          <option value="urgent">Urgent</option>
+        </select>
+      </label>
+      <label class="quick-opts-wide">Deadline
+        <input type="datetime-local" name="deadline">
+      </label>
+    </div>
     <button type="submit">Tambah</button>
   </form>
 </dialog>
