@@ -249,7 +249,7 @@ func bootstrapAdmin(ctx context.Context, db *sql.DB, username, password string) 
 // noDirListing answers 404 for directory paths so http.FileServer doesn't expose file listings.
 func noDirListing(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasSuffix(r.URL.Path, "/") {
+		if r.URL.Path == "" || strings.HasSuffix(r.URL.Path, "/") {
 			http.NotFound(w, r)
 			return
 		}
