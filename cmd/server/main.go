@@ -78,6 +78,7 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
+	r.Use(authmw.SecurityHeaders)
 	r.Use(authmw.SameOrigin)
 
 	// static

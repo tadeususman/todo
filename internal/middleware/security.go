@@ -6,7 +6,36 @@ import (
 	"net/url"
 	"sync"
 	"time"
+
+	"todo/internal/session"
 )
+
+// csp is as strict as the current templates allow: they still use inline <script>/<style> and style attributes,
+// and load htmx from unpkg and web fonts from Google. Tighten with nonces once the inline code is gone.
+const csp = "default-src 'self'; " +
+	"script-src 'self' 'unsafe-inline' https://unpkg.com; " +
+	"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+	"font-src 'self' https://fonts.gstatic.com; " +
+	"img-src 'self' data:; " +
+	"connect-src 'self'; " +
+	"manifest-src 'self'; worker-src 'self'; " +
+	"object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+
+// SecurityHeaders sets baseline browser hardening headers on every response.
+func SecurityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("Content-Security-Policy", csp)
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("X-Frame-Options", "DENY")
+		h.Set("Referrer-Policy", "same-origin")
+		h.Set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()")
+		if session.IsSecure(r) {
+			h.Set("Strict-Transport-Security", "max-age=31536000")
+		}
+		next.ServeHTTP(w, r)
+	})
+}
 
 // SameOrigin rejects state-changing requests whose Origin/Referer host differs from the request Host (CSRF guard).
 // Requests without either header (non-browser clients) are allowed; browsers always send one on cross-site POSTs.
