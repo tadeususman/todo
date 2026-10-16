@@ -104,7 +104,7 @@ func main() {
 	r.Use(authmw.SameOrigin)
 
 	// static
-	fs := http.FileServer(http.Dir("web/static"))
+	fs := noDirListing(http.FileServer(http.Dir("web/static")))
 	r.Handle("/static/*", http.StripPrefix("/static/", fs))
 	r.Get("/sw.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/javascript")
@@ -244,4 +244,15 @@ func bootstrapAdmin(ctx context.Context, db *sql.DB, username, password string) 
 	_, err = db.ExecContext(ctx,
 		`UPDATE users SET is_admin = true, status = 'approved' WHERE lower(username) = lower($1)`, username)
 	return err
+}
+
+// noDirListing answers 404 for directory paths so http.FileServer doesn't expose file listings.
+func noDirListing(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/") {
+			http.NotFound(w, r)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
