@@ -38,6 +38,18 @@ func SecurityHeaders(next http.Handler) http.Handler {
 	})
 }
 
+// MaxBody caps request body size so a single client can't exhaust memory with huge forms.
+func MaxBody(n int64) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Body != nil {
+				r.Body = http.MaxBytesReader(w, r.Body, n)
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 // SameOrigin rejects state-changing requests whose Origin/Referer host differs from the request Host (CSRF guard).
 // Requests without either header (non-browser clients) are allowed; browsers always send one on cross-site POSTs.
 func SameOrigin(next http.Handler) http.Handler {

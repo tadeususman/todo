@@ -3,9 +3,13 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -88,6 +92,7 @@ func main() {
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
 	r.Use(authmw.SecurityHeaders)
+	r.Use(authmw.MaxBody(1 << 20))
 	r.Use(authmw.SameOrigin)
 
 	// static
@@ -170,8 +175,29 @@ func main() {
 	})
 
 	log.Printf("todo listening on :%s (provider=%s model=%s)", cfg.AppPort, aiClient.Provider(), aiClient.Model())
-	if err := http.ListenAndServe(":"+cfg.AppPort, r); err != nil {
-		log.Fatal(err)
+	srv := &http.Server{
+		Addr:              ":" + cfg.AppPort,
+		Handler:           r,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      90 * time.Second, // LLM calls can take up to 60s
+		IdleTimeout:       120 * time.Second,
+		MaxHeaderBytes:    1 << 16,
+	}
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatal(err)
+		}
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	<-stop
+	log.Print("shutting down")
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("shutdown: %v", err)
 	}
 }
 
