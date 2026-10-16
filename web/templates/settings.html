@@ -137,6 +137,18 @@
       </span>
     </form>
 
+    <form method="post" action="/prefs/size" class="set-row set-row-static">
+      <span class="set-label">Ukuran teks</span>
+      <span class="set-seg">
+        {{range .SizeChoices}}
+        <label>
+          <input type="radio" name="size" value="{{.Key}}" {{if eq .Key $.CurrentSize}}checked{{end}} onchange="this.form.submit()">
+          <span>{{.Label}}</span>
+        </label>
+        {{end}}
+      </span>
+    </form>
+
     <details class="set-item">
       <summary class="set-row">
         <span class="set-label">Font</span>

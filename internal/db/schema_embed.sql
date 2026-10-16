@@ -96,6 +96,8 @@ CREATE INDEX IF NOT EXISTS idx_chat_user_time ON chat_messages(user_id, created_
 ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS actions       TEXT;
 ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS action_status TEXT NOT NULL DEFAULT '';
 
+ALTER TABLE user_prefs ADD COLUMN IF NOT EXISTS ui_font_size TEXT NOT NULL DEFAULT 'medium';  -- small | medium | large | xlarge
+
 CREATE TABLE IF NOT EXISTS ai_logs (
     id            BIGSERIAL PRIMARY KEY,
     task_id       BIGINT REFERENCES tasks(id) ON DELETE SET NULL,

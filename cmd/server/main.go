@@ -176,6 +176,7 @@ func main() {
 
 		r.Post("/prefs/theme", app.PrefsSetTheme)
 		r.Post("/prefs/font", app.PrefsSetFont)
+		r.Post("/prefs/size", app.PrefsSetSize)
 
 		r.Post("/chat", app.ChatSend)
 		r.Post("/chat/clear", app.ChatClear)

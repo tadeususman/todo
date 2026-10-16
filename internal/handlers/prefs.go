@@ -32,3 +32,16 @@ func (a *App) PrefsSetFont(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, "/settings", http.StatusSeeOther)
 }
+
+func (a *App) PrefsSetSize(w http.ResponseWriter, r *http.Request) {
+	uid := authmw.UserID(r)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "bad form", http.StatusBadRequest)
+		return
+	}
+	if err := prefs.SetSize(r.Context(), a.DB, uid, r.FormValue("size")); err != nil {
+		serverError(w, err)
+		return
+	}
+	http.Redirect(w, r, "/settings", http.StatusSeeOther)
+}

@@ -38,6 +38,12 @@ var themeChoices = []prefChoice{
 	{"light", "Terang"},
 	{"dark", "Gelap"},
 }
+var sizeChoices = []prefChoice{
+	{"small", "Kecil"},
+	{"medium", "Normal"},
+	{"large", "Besar"},
+	{"xlarge", "Ekstra"},
+}
 var fontChoices = []fontChoice{
 	{"system", "Default sistem", "-apple-system, BlinkMacSystemFont, sans-serif"},
 	{"inter", "Inter", "'Inter', sans-serif"},
@@ -165,6 +171,8 @@ func (a *App) renderSettings(w http.ResponseWriter, r *http.Request, status int,
 		"CurrentFont":   p.Font,
 		"ThemeChoices":  themeChoices,
 		"FontChoices":   fontChoices,
+		"CurrentSize":   p.Size,
+		"SizeChoices":   sizeChoices,
 		"Error":         errMsg,
 		"Info":          info,
 		"ArchivedCount": task.CountArchived(r.Context(), a.DB, uid),

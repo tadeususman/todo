@@ -173,14 +173,15 @@ func (a *App) render(w http.ResponseWriter, r *http.Request, name string, data m
 		return
 	}
 	// defaults for unauthenticated pages
-	theme, font := "light", "system"
+	theme, font, size := "light", "system", "medium"
 	if uid := authmw.UserID(r); uid != 0 {
 		if p, err := prefs.Get(r.Context(), a.DB, uid); err == nil {
-			theme, font = p.Theme, p.Font
+			theme, font, size = p.Theme, p.Font, p.Size
 		}
 	}
 	data["Theme"] = theme
 	data["Font"] = font
+	data["Size"] = size
 	if msg := popFlash(w, r); msg != "" {
 		data["Flash"] = msg
 	}

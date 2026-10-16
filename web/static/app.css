@@ -47,6 +47,11 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+/* text size preference: everything is rem-based, so scaling the root scales the UI */
+html.size-small  { font-size: 14px; }
+html.size-medium { font-size: 16px; }
+html.size-large  { font-size: 18px; }
+html.size-xlarge { font-size: 20px; }
 body {
   font-family: var(--font-ui);
   background: var(--bg);
@@ -54,7 +59,7 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-size: 15px;
+  font-size: .9375rem;
   padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom));
 }
 
@@ -1636,7 +1641,9 @@ body.theme-dark .brand-mark .logo-dark { display: block; }
   text-align: left;
   cursor: pointer;
 }
-.set-row-static { cursor: default; }
+.set-row-static { cursor: default; flex-wrap: wrap; row-gap: .5rem; }
+.set-row-static .set-seg { max-width: 100%; }
+.set-row-static .set-seg span { padding: .375rem .625rem; }
 .set-label { flex-shrink: 0; color: var(--text); }
 .set-label-strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
 .set-value { flex: 1; min-width: 0; text-align: right; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
