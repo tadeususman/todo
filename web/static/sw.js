@@ -1,7 +1,7 @@
 // Service worker — network-first for everything so updates propagate instantly.
-// Cache only used as offline fallback.
+// Only public static assets are cached (offline fallback); pages with user data never are.
 
-const CACHE = 'todo-v45';
+const CACHE = 'todo-v46';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
@@ -26,25 +26,22 @@ self.addEventListener('fetch', (e) => {
   const isNav = e.request.mode === 'navigate';
 
   if (isStatic) {
-    e.respondWith(fetch(e.request, { cache: 'no-store' }).catch(() => caches.match(e.request)));
+    e.respondWith(fetch(e.request, { cache: 'no-store' }).catch(() => caches.match(e.request).then((r) => r || Response.error())));
     return;
   }
 
+  // Pages are never stored: they hold private data, and a cached copy would stay readable after logout.
   if (isNav) {
     e.respondWith(
-      fetch(e.request)
-        .then((res) => {
-          if (res.ok) {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
-          }
-          return res;
-        })
-        .catch(() => caches.match(e.request))
+      fetch(e.request).catch(() => new Response(OFFLINE_HTML, { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }))
     );
     return;
   }
 });
+
+const OFFLINE_HTML = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+  '<title>Offline</title><body style="font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;color:#64748b;text-align:center">' +
+  '<div><p style="font-size:1.1rem;margin:0 0 .5rem">Tidak ada koneksi</p><p style="margin:0;font-size:.9rem">Sambungkan ke internet lalu muat ulang.</p></div>';
 
 // ---- Web Push: deadline reminders ----
 self.addEventListener('push', (e) => {

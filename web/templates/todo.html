@@ -10,19 +10,32 @@
   </div>
 </header>
 
+<form class="search-box" method="get" action="/todo" role="search">
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  <input type="search" name="q" value="{{.Q}}" placeholder="Cari task" maxlength="100" autocomplete="off" aria-label="Cari task">
+  {{if .FilterID}}<input type="hidden" name="project" value="{{.FilterID}}">{{end}}
+  {{if .Priority}}<input type="hidden" name="priority" value="{{.Priority}}">{{end}}
+</form>
+
 <nav class="chip-row" aria-label="Filter project">
-  <a href="/todo" class="chip {{if eq .FilterID 0}}active{{end}}">{{.ProjectAll}}</a>
+  <a href="{{todourl 0 $.Priority $.Q}}" class="chip {{if eq .FilterID 0}}active{{end}}">{{.ProjectAll}}</a>
   {{range .Projects}}
-  <a href="/todo?project={{.ID}}" class="chip {{if eq .ID $.FilterID}}active{{end}}">
+  <a href="{{todourl .ID $.Priority $.Q}}" class="chip {{if eq .ID $.FilterID}}active{{end}}">
     <span class="chip-dot" style="background:{{.Color}}"></span>{{.Name}}
   </a>
   {{end}}
+</nav>
+<nav class="chip-row chip-row-tight" aria-label="Filter prioritas">
+  {{range .Priorities}}
+  <a href="{{if eq .Key $.Priority}}{{todourl $.FilterID "" $.Q}}{{else}}{{todourl $.FilterID .Key $.Q}}{{end}}" class="chip {{if eq .Key $.Priority}}active{{end}}">{{.Label}}</a>
+  {{end}}
+  {{if .Filtering}}<a href="{{todourl .FilterID "" ""}}" class="chip chip-clear">Hapus filter</a>{{end}}
 </nav>
 
 {{if not .Sections}}
 <div class="empty">
   {{template "icon-check" .}}
-  <p>Tidak ada task di filter ini.</p>
+  <p>{{if .Q}}Tidak ada task yang cocok dengan "{{.Q}}".{{else}}Tidak ada task di filter ini.{{end}}</p>
 </div>
 {{end}}
 
@@ -41,7 +54,7 @@
 {{end}}
 </div>
 
-{{$r := "/todo"}}{{if .FilterID}}{{$r = printf "/todo?project=%d" .FilterID}}{{end}}
+{{$r := .Here}}
 <form id="bulk-form" class="bulk-bar" method="post" action="/tasks/bulk" hidden>
   <input type="hidden" name="redirect" value="{{$r}}">
   <span class="bulk-count" id="bulk-count" aria-live="polite">0 dipilih</span>

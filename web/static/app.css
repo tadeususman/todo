@@ -1876,3 +1876,12 @@ body.bulk-on .fab { display: none; }
 
 .set-seg-wrap { flex-wrap: wrap; justify-content: flex-end; }
 .set-hint-pad { padding: .5rem 1rem 0; }
+
+/* todo search + priority filter */
+.search-box { position: relative; margin: 0 0 .75rem; }
+.search-box svg { position: absolute; left: .875rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+.search-box input { width: 100%; padding: .625rem .875rem .625rem 2.375rem; border: none; border-radius: 12px; background: var(--surface-alt); color: var(--text); font: inherit; font-size: .9375rem; outline: none; -webkit-appearance: none; appearance: none; }
+.search-box input:focus { box-shadow: 0 0 0 2px var(--accent-strong); }
+.search-box input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.chip-row-tight { margin-top: -1rem; }
+.chip-clear { color: var(--text-muted); background: transparent; box-shadow: inset 0 0 0 1px var(--border-soft); }

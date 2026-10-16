@@ -133,3 +133,22 @@ func TestRenderMarkdownEscapesHTML(t *testing.T) {
 		t.Errorf("bold lost: %q", got)
 	}
 }
+
+func TestTodoURL(t *testing.T) {
+	cases := []struct {
+		project int64
+		prio, q string
+		want    string
+	}{
+		{0, "", "", "/todo"},
+		{3, "", "", "/todo?project=3"},
+		{0, "urgent", "", "/todo?priority=urgent"},
+		{2, "high", "call client", "/todo?priority=high&project=2&q=call+client"},
+		{0, "", "a&b=c#x", "/todo?q=a%26b%3Dc%23x"},
+	}
+	for _, c := range cases {
+		if got := todoURL(c.project, c.prio, c.q); got != c.want {
+			t.Errorf("todoURL(%d,%q,%q) = %q, want %q", c.project, c.prio, c.q, got, c.want)
+		}
+	}
+}

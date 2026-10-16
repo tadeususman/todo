@@ -136,6 +136,7 @@ func LoadTemplates(dir string) map[string]*template.Template {
 	}
 	base, err := template.New("").Funcs(template.FuncMap{
 		"markdown": renderMarkdown,
+		"todourl":  todoURL,
 		"wib":      toWIB,
 		"when":     whenLabel,
 		"late":     isLate,

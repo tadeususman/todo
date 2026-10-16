@@ -2,8 +2,11 @@ package handlers
 
 import (
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	authmw "todo/internal/middleware"
 	"todo/internal/prefs"
@@ -60,6 +63,26 @@ var fontChoices = []fontChoice{
 	{"geist", "Geist", "'Geist', sans-serif"},
 }
 
+var priorityChips = []prefChoice{{"urgent", "Urgent"}, {"high", "Tinggi"}, {"medium", "Sedang"}, {"low", "Rendah"}}
+
+// todoURL builds /todo with only the filters that are set, so chips keep each other's state.
+func todoURL(project int64, priority, q string) string {
+	v := url.Values{}
+	if project != 0 {
+		v.Set("project", strconv.FormatInt(project, 10))
+	}
+	if priority != "" {
+		v.Set("priority", priority)
+	}
+	if q != "" {
+		v.Set("q", q)
+	}
+	if len(v) == 0 {
+		return "/todo"
+	}
+	return "/todo?" + v.Encode()
+}
+
 type todoSection struct {
 	Key   string
 	Label string
@@ -75,18 +98,40 @@ func (a *App) TodoListPage(w http.ResponseWriter, r *http.Request) {
 		serverError(w, err)
 		return
 	}
-	done, _ := task.ListRecentDone(r.Context(), a.DB, uid, 15)
+	// ?q= pencarian teks, ?priority= filter prioritas; keduanya digabung dengan ?project=.
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	if utf8.RuneCountInString(q) > 100 {
+		q = string([]rune(q)[:100])
+	}
+	prio := r.URL.Query().Get("priority")
+	switch prio {
+	case "urgent", "high", "medium", "low":
+	default:
+		prio = ""
+	}
+	doneLimit := 15
+	if q != "" {
+		doneLimit = 200 // pencarian juga menjangkau task selesai yang lebih lama
+	}
+	done, _ := task.ListRecentDone(r.Context(), a.DB, uid, doneLimit)
 
 	// parse filter: ?project=ID (0 = semua)
 	var filterID int64
 	if raw := r.URL.Query().Get("project"); raw != "" {
 		filterID, _ = strconv.ParseInt(raw, 10, 64)
 	}
+	needle := strings.ToLower(q)
 	filter := func(t task.Task) bool {
-		if filterID == 0 {
-			return true
+		if filterID != 0 && (t.ProjectID == nil || *t.ProjectID != filterID) {
+			return false
 		}
-		return t.ProjectID != nil && *t.ProjectID == filterID
+		if prio != "" && t.Priority != prio {
+			return false
+		}
+		if needle != "" && !strings.Contains(strings.ToLower(t.Title+"\n"+t.Description), needle) {
+			return false
+		}
+		return true
 	}
 
 	loc, _ := time.LoadLocation("Asia/Jakarta")
@@ -154,6 +199,11 @@ func (a *App) TodoListPage(w http.ResponseWriter, r *http.Request) {
 		"FilterID":   filterID,
 		"TotalOpen":  totalOpen,
 		"ProjectAll": "Semua",
+		"Q":          q,
+		"Priority":   prio,
+		"Priorities": priorityChips,
+		"Here":       todoURL(filterID, prio, q),
+		"Filtering":  q != "" || prio != "",
 	})
 }
 
