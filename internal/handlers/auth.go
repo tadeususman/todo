@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"todo/internal/user"
 )
@@ -20,13 +21,16 @@ func (a *App) LoginSubmit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad form", http.StatusBadRequest)
 		return
 	}
-	if a.Limiter.Blocked(r) {
+	acct := strings.ToLower(strings.TrimSpace(r.FormValue("username")))
+	if a.Limiter.Blocked(r) || a.AccountLimiter.BlockedKey(acct) {
 		a.render(w, r, "login.html", map[string]any{"_status": http.StatusTooManyRequests, "Error": "Terlalu banyak percobaan. Coba lagi 15 menit lagi."})
 		return
 	}
 	u, err := user.Authenticate(r.Context(), a.DB, r.FormValue("username"), r.FormValue("password"))
 	if err != nil {
 		a.Limiter.Fail(r)
+		a.AccountLimiter.FailKey(acct)
+		a.audit(r, 0, "login_failed", "")
 		a.render(w, r, "login.html", map[string]any{"Error": "Username atau password salah."})
 		return
 	}
@@ -40,7 +44,9 @@ func (a *App) LoginSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userID := u.ID
+	a.audit(r, userID, "login", "")
 	a.Limiter.Reset(r)
+	a.AccountLimiter.ResetKey(acct)
 	if err := a.Sessions.Create(w, r, userID); err != nil {
 		http.Error(w, "could not start session", http.StatusInternalServerError)
 		return
@@ -94,7 +100,7 @@ func (a *App) RegisterSubmit(w http.ResponseWriter, r *http.Request) {
 
 // isUserFacing reports whether err is a validation error whose message is safe to show.
 func isUserFacing(err error) bool {
-	for _, e := range []error{user.ErrUsernameInvalid, user.ErrUsernameTaken, user.ErrEmailInvalid, user.ErrEmailTaken, user.ErrPasswordShort, user.ErrPasswordLong, user.ErrPasswordWrong} {
+	for _, e := range []error{user.ErrUsernameInvalid, user.ErrUsernameTaken, user.ErrEmailInvalid, user.ErrEmailTaken, user.ErrPasswordShort, user.ErrPasswordLong, user.ErrPasswordWrong, user.ErrPasswordCommon} {
 		if errors.Is(err, e) {
 			return true
 		}

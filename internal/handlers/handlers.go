@@ -111,12 +111,13 @@ func isLate(v any, status string) bool {
 }
 
 type App struct {
-	DB         *sql.DB
-	Sessions   *session.Manager
-	LLM        *llm.Client
-	Limiter    *authmw.LoginLimiter
-	RegLimiter *authmw.LoginLimiter
-	Pages      map[string]*template.Template // one fully-parsed set per page, built at startup
+	DB             *sql.DB
+	Sessions       *session.Manager
+	LLM            *llm.Client
+	AccountLimiter *authmw.LoginLimiter // per-username, catches distributed guessing
+	Limiter        *authmw.LoginLimiter
+	RegLimiter     *authmw.LoginLimiter
+	Pages          map[string]*template.Template // one fully-parsed set per page, built at startup
 }
 
 // LoadTemplates parses the shared layout/partials once, then clones that base per page

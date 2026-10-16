@@ -67,6 +67,13 @@ func main() {
 			if err := sessions.PurgeExpired(ctx); err != nil {
 				log.Printf("purge sessions: %v", err)
 			}
+			// Retensi: isi chat/prompt LLM disimpan sementara saja; audit log lebih lama.
+			if _, err := pool.ExecContext(ctx, `DELETE FROM ai_logs WHERE created_at < now() - make_interval(days => $1)`, cfg.AILogRetentionDays); err != nil {
+				log.Printf("purge ai_logs: %v", err)
+			}
+			if _, err := pool.ExecContext(ctx, `DELETE FROM audit_log WHERE created_at < now() - interval '365 days'`); err != nil {
+				log.Printf("purge audit_log: %v", err)
+			}
 			time.Sleep(time.Hour)
 		}
 	}()
@@ -80,12 +87,13 @@ func main() {
 	tmpl := handlers.LoadTemplates("web/templates")
 
 	app := &handlers.App{
-		DB:         pool,
-		Sessions:   sessions,
-		LLM:        aiClient,
-		Limiter:    authmw.NewLoginLimiter(5, 15*time.Minute),
-		RegLimiter: authmw.NewLoginLimiter(5, time.Hour),
-		Pages:      tmpl,
+		DB:             pool,
+		Sessions:       sessions,
+		LLM:            aiClient,
+		Limiter:        authmw.NewLoginLimiter(5, 15*time.Minute),
+		AccountLimiter: authmw.NewLoginLimiter(10, 15*time.Minute),
+		RegLimiter:     authmw.NewLoginLimiter(5, time.Hour),
+		Pages:          tmpl,
 	}
 
 	r := chi.NewRouter()

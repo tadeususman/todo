@@ -46,6 +46,7 @@ func (a *App) adminSetStatus(status string) http.HandlerFunc {
 			serverError(w, err)
 			return
 		}
+		a.audit(r, 0, "admin_set_"+status, strconv.FormatInt(id, 10))
 		http.Redirect(w, r, "/admin/users", http.StatusSeeOther)
 	}
 }
@@ -69,6 +70,7 @@ func (a *App) AdminResetPassword(w http.ResponseWriter, r *http.Request) {
 		serverError(w, err)
 		return
 	}
+	a.audit(r, 0, "admin_reset_password", strconv.FormatInt(id, 10))
 	w.Header().Set("Cache-Control", "no-store")
 	a.renderAdminUsers(w, r, id, pw)
 }

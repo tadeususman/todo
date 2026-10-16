@@ -3,15 +3,17 @@ package config
 import (
 	"log"
 	"os"
+	"strconv"
 )
 
 const Version = "0.1.0"
 
 type Config struct {
-	AppPort        string
-	DBUrl          string
-	TZ             string
-	TrustedProxies string // comma-separated CIDRs/IPs allowed to set X-Real-IP (empty = loopback+private)
+	AppPort            string
+	DBUrl              string
+	AILogRetentionDays int // ai_logs older than this are purged
+	TZ                 string
+	TrustedProxies     string // comma-separated CIDRs/IPs allowed to set X-Real-IP (empty = loopback+private)
 
 	AdminUsername string
 	AdminPassword string
@@ -25,10 +27,11 @@ type Config struct {
 
 func Load() Config {
 	return Config{
-		AppPort:        getEnv("APP_PORT", "8080"),
-		DBUrl:          mustEnv("DATABASE_URL"),
-		TZ:             getEnv("TZ", "Asia/Jakarta"),
-		TrustedProxies: os.Getenv("TRUSTED_PROXIES"),
+		AppPort:            getEnv("APP_PORT", "8080"),
+		DBUrl:              mustEnv("DATABASE_URL"),
+		AILogRetentionDays: getEnvInt("AI_LOG_RETENTION_DAYS", 30),
+		TZ:                 getEnv("TZ", "Asia/Jakarta"),
+		TrustedProxies:     os.Getenv("TRUSTED_PROXIES"),
 
 		AdminUsername: mustEnv("ADMIN_USERNAME"),
 		AdminPassword: mustEnv("ADMIN_PASSWORD"),
@@ -54,4 +57,14 @@ func mustEnv(key string) string {
 		log.Fatalf("missing required environment variable: %s", key)
 	}
 	return v
+}
+
+func getEnvInt(key string, fallback int) int {
+	if v := os.Getenv(key); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return n
+		}
+		log.Fatalf("%s must be a positive integer", key)
+	}
+	return fallback
 }

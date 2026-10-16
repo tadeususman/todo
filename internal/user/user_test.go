@@ -24,7 +24,7 @@ func TestNormalizeAndPassword(t *testing.T) {
 	if ValidatePassword("short") == nil {
 		t.Error("short password accepted")
 	}
-	if ValidatePassword("12345678") != nil {
+	if ValidatePassword("k0pi-s4u") != nil {
 		t.Error("8-char password rejected")
 	}
 	long := make([]byte, 73)
@@ -51,5 +51,16 @@ func TestValidateEmail(t *testing.T) {
 	}
 	if got := NormalizeEmail("  Tade@Mail.COM "); got != "tade@mail.com" {
 		t.Errorf("got %q", got)
+	}
+}
+
+func TestValidatePasswordRejectsCommon(t *testing.T) {
+	for _, p := range []string{"password123", "Password123", "12345678", "qwertyuiop"} {
+		if err := ValidatePassword(p); err != ErrPasswordCommon {
+			t.Errorf("%q: got %v want ErrPasswordCommon", p, err)
+		}
+	}
+	if err := ValidatePassword("kopi-susu-pagi-9"); err != nil {
+		t.Errorf("good password rejected: %v", err)
 	}
 }

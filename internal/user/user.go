@@ -34,6 +34,7 @@ var (
 	ErrEmailTaken      = errors.New("Email sudah terdaftar.")
 	ErrPasswordShort   = errors.New("Password minimal 8 karakter.")
 	ErrPasswordLong    = errors.New("Password maksimal 72 karakter.")
+	ErrPasswordCommon  = errors.New("Password terlalu umum atau mudah ditebak. Pilih yang lain.")
 	ErrPasswordWrong   = errors.New("Password saat ini salah.")
 	ErrNotFound        = errors.New("user tidak ditemukan")
 )
@@ -76,6 +77,9 @@ func ValidatePassword(s string) error {
 	if len(s) > maxPassword {
 		return ErrPasswordLong
 	}
+	if commonPasswords[strings.ToLower(s)] {
+		return ErrPasswordCommon
+	}
 	return nil
 }
 
@@ -112,6 +116,9 @@ func Register(ctx context.Context, db *sql.DB, username, email, password string)
 	}
 	if err := ValidatePassword(password); err != nil {
 		return err
+	}
+	if strings.EqualFold(password, username) || strings.EqualFold(password, email) {
+		return ErrPasswordCommon
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {

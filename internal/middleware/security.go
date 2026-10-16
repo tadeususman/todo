@@ -135,6 +135,9 @@ func isTrusted(ip net.IP) bool {
 }
 
 // clientIP returns the peer address, or X-Real-IP only when the peer is a trusted proxy.
+// ClientIP is the exported form of clientIP.
+func ClientIP(r *http.Request) string { return clientIP(r) }
+
 func clientIP(r *http.Request) string {
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
@@ -166,21 +169,25 @@ func (l *LoginLimiter) recent(ip string, now time.Time) []time.Time {
 }
 
 // Blocked reports whether the client has exhausted its attempts.
-func (l *LoginLimiter) Blocked(r *http.Request) bool {
+func (l *LoginLimiter) Blocked(r *http.Request) bool { return l.BlockedKey(clientIP(r)) }
+func (l *LoginLimiter) Fail(r *http.Request)         { l.FailKey(clientIP(r)) }
+func (l *LoginLimiter) Reset(r *http.Request)        { l.ResetKey(clientIP(r)) }
+
+// Key-based variants let the same limiter track e.g. usernames instead of IPs.
+func (l *LoginLimiter) BlockedKey(key string) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	return len(l.recent(clientIP(r), time.Now())) >= l.max
+	return len(l.recent(key, time.Now())) >= l.max
 }
 
-func (l *LoginLimiter) Fail(r *http.Request) {
+func (l *LoginLimiter) FailKey(key string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	ip := clientIP(r)
-	l.hits[ip] = append(l.recent(ip, time.Now()), time.Now())
+	l.hits[key] = append(l.recent(key, time.Now()), time.Now())
 }
 
-func (l *LoginLimiter) Reset(r *http.Request) {
+func (l *LoginLimiter) ResetKey(key string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	delete(l.hits, clientIP(r))
+	delete(l.hits, key)
 }

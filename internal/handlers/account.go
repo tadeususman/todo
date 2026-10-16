@@ -55,6 +55,7 @@ func (a *App) AccountPassword(w http.ResponseWriter, r *http.Request) {
 		serverError(w, err)
 		return
 	}
+	a.audit(r, 0, "password_changed", "")
 	a.renderSettings(w, r, http.StatusOK, "", "Password diganti. Perangkat lain dikeluarkan.")
 }
 
