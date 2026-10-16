@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -43,9 +44,15 @@ func (m *Manager) Create(w http.ResponseWriter, r *http.Request, userID int64) e
 		Expires:  expires,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
-		Secure:   r.TLS != nil,
+		Secure:   IsSecure(r),
 	})
 	return nil
+}
+
+// IsSecure reports whether the client reached us over HTTPS, directly or via a TLS-terminating proxy.
+// Spoofing X-Forwarded-Proto only changes the Secure flag on the caller's own cookie, so it is safe to trust.
+func IsSecure(r *http.Request) bool {
+	return r.TLS != nil || strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https")
 }
 
 func (m *Manager) UserID(r *http.Request) (int64, bool) {
@@ -74,7 +81,10 @@ func (m *Manager) Destroy(w http.ResponseWriter, r *http.Request) {
 		Value:    "",
 		Path:     "/",
 		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
 		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		Secure:   IsSecure(r),
 	})
 }
 
