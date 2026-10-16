@@ -109,6 +109,16 @@ func main() {
 	})
 
 	// public
+	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+		if err := pool.PingContext(ctx); err != nil {
+			http.Error(w, "db unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		w.Header().Set("Cache-Control", "no-store")
+		_, _ = w.Write([]byte("ok"))
+	})
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		if _, ok := sessions.UserID(r); ok {
 			http.Redirect(w, r, "/home", http.StatusSeeOther)

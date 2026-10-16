@@ -14,8 +14,13 @@ WORKDIR /app
 
 RUN apk add --no-cache ca-certificates tzdata
 
+RUN addgroup -S app && adduser -S -G app -H -s /sbin/nologin app
+
 COPY --from=build /todo ./todo
 COPY web ./web
 
+USER app
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:8080/healthz >/dev/null || exit 1
 ENTRYPOINT ["./todo"]
