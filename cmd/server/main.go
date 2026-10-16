@@ -25,6 +25,7 @@ import (
 	authmw "todo/internal/middleware"
 	"todo/internal/prefs"
 	"todo/internal/project"
+	"todo/internal/push"
 	"todo/internal/session"
 	"todo/internal/user"
 )
@@ -87,19 +88,32 @@ func main() {
 		GeminiKey:   cfg.GeminiKey,
 		GeminiModel: cfg.GeminiModel,
 	}, pool)
+	pushSubject := cfg.PublicURL
+	if pushSubject == "" || !strings.HasPrefix(pushSubject, "https://") {
+		pushSubject = "mailto:admin@example.com" // push services want a contact; set PUBLIC_URL (https) to replace it
+	}
+	pushSvc, err := push.New(ctx, pool, pushSubject)
+	if err != nil {
+		log.Fatalf("push: %v", err)
+	}
+	runCtx, stopRun := context.WithCancel(ctx)
+	defer stopRun()
+	go pushSvc.Run(runCtx)
 	tmpl := handlers.LoadTemplates("web/templates")
 
 	app := &handlers.App{
-		DB:             pool,
-		Sessions:       sessions,
-		LLM:            aiClient,
-		Limiter:        authmw.NewLoginLimiter(5, 15*time.Minute),
-		AccountLimiter: authmw.NewLoginLimiter(10, 15*time.Minute),
-		ResetLimiter:   authmw.NewLoginLimiter(3, time.Hour),
-		Mail:           mail.Config{Host: cfg.SMTPHost, Port: cfg.SMTPPort, User: cfg.SMTPUser, Pass: cfg.SMTPPass, From: cfg.SMTPFrom},
-		PublicURL:      cfg.PublicURL,
-		RegLimiter:     authmw.NewLoginLimiter(5, time.Hour),
-		Pages:          tmpl,
+		DB:              pool,
+		Sessions:        sessions,
+		LLM:             aiClient,
+		Limiter:         authmw.NewLoginLimiter(5, 15*time.Minute),
+		AccountLimiter:  authmw.NewLoginLimiter(10, 15*time.Minute),
+		Push:            pushSvc,
+		PushTestLimiter: authmw.NewLoginLimiter(5, time.Minute),
+		ResetLimiter:    authmw.NewLoginLimiter(3, time.Hour),
+		Mail:            mail.Config{Host: cfg.SMTPHost, Port: cfg.SMTPPort, User: cfg.SMTPUser, Pass: cfg.SMTPPass, From: cfg.SMTPFrom},
+		PublicURL:       cfg.PublicURL,
+		RegLimiter:      authmw.NewLoginLimiter(5, time.Hour),
+		Pages:           tmpl,
 	}
 
 	r := chi.NewRouter()
@@ -199,6 +213,10 @@ func main() {
 		r.Post("/prefs/theme", app.PrefsSetTheme)
 		r.Post("/prefs/font", app.PrefsSetFont)
 		r.Post("/prefs/size", app.PrefsSetSize)
+		r.Post("/prefs/remind", app.PrefsSetRemind)
+		r.Post("/push/subscribe", app.PushSubscribe)
+		r.Post("/push/unsubscribe", app.PushUnsubscribe)
+		r.Post("/push/test", app.PushTest)
 
 		r.Post("/chat", app.ChatSend)
 		r.Post("/chat/clear", app.ChatClear)

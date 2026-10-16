@@ -132,3 +132,14 @@ CREATE TABLE IF NOT EXISTS password_resets (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);
+
+-- Reminder deadline lewat web push: sekali per nilai deadline (direset saat deadline diubah).
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS reminded_at TIMESTAMPTZ;
+ALTER TABLE user_prefs ADD COLUMN IF NOT EXISTS remind_lead_min INT NOT NULL DEFAULT 60;  -- menit sebelum deadline; 0 = mati
+CREATE INDEX IF NOT EXISTS idx_tasks_remind ON tasks(deadline) WHERE reminded_at IS NULL AND deadline IS NOT NULL;
+
+-- Key/value kecil untuk rahasia yang dibuat app sendiri (mis. kunci VAPID).
+CREATE TABLE IF NOT EXISTS app_kv (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);

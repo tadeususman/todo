@@ -8,6 +8,7 @@ import (
 	authmw "todo/internal/middleware"
 	"todo/internal/prefs"
 	"todo/internal/project"
+	"todo/internal/push"
 	"todo/internal/task"
 	"todo/internal/user"
 )
@@ -44,6 +45,14 @@ var sizeChoices = []prefChoice{
 	{"large", "Besar"},
 	{"xlarge", "Ekstra"},
 }
+
+type remindChoice struct {
+	Minutes int
+	Label   string
+}
+
+var remindChoices = []remindChoice{{0, "Mati"}, {15, "15 menit"}, {30, "30 menit"}, {60, "1 jam"}, {180, "3 jam"}, {1440, "1 hari"}}
+
 var fontChoices = []fontChoice{
 	{"system", "Default sistem", "-apple-system, BlinkMacSystemFont, sans-serif"},
 	{"inter", "Inter", "'Inter', sans-serif"},
@@ -172,6 +181,10 @@ func (a *App) renderSettings(w http.ResponseWriter, r *http.Request, status int,
 		"ThemeChoices":  themeChoices,
 		"FontChoices":   fontChoices,
 		"CurrentSize":   p.Size,
+		"PushKey":       a.Push.PublicKey(),
+		"PushDevices":   a.Push.CountSubscriptions(r.Context(), uid),
+		"RemindLead":    push.GetLead(r.Context(), a.DB, uid),
+		"RemindChoices": remindChoices,
 		"SizeChoices":   sizeChoices,
 		"Error":         errMsg,
 		"Info":          info,

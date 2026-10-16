@@ -16,6 +16,7 @@ import (
 	"todo/internal/mail"
 	authmw "todo/internal/middleware"
 	"todo/internal/prefs"
+	"todo/internal/push"
 	"todo/internal/session"
 )
 
@@ -112,16 +113,18 @@ func isLate(v any, status string) bool {
 }
 
 type App struct {
-	DB             *sql.DB
-	Sessions       *session.Manager
-	LLM            *llm.Client
-	AccountLimiter *authmw.LoginLimiter // per-username, catches distributed guessing
-	Limiter        *authmw.LoginLimiter
-	ResetLimiter   *authmw.LoginLimiter
-	Mail           mail.Config
-	PublicURL      string
-	RegLimiter     *authmw.LoginLimiter
-	Pages          map[string]*template.Template // one fully-parsed set per page, built at startup
+	DB              *sql.DB
+	Sessions        *session.Manager
+	LLM             *llm.Client
+	AccountLimiter  *authmw.LoginLimiter // per-username, catches distributed guessing
+	Limiter         *authmw.LoginLimiter
+	PushTestLimiter *authmw.LoginLimiter
+	Push            *push.Service
+	ResetLimiter    *authmw.LoginLimiter
+	Mail            mail.Config
+	PublicURL       string
+	RegLimiter      *authmw.LoginLimiter
+	Pages           map[string]*template.Template // one fully-parsed set per page, built at startup
 }
 
 // LoadTemplates parses the shared layout/partials once, then clones that base per page

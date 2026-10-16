@@ -168,6 +168,34 @@
   </div>
 </section>
 
+<!-- Notifikasi -->
+<section class="set-section" id="push-section" data-key="{{.PushKey}}">
+  <h2 class="set-title">Notifikasi</h2>
+  <div class="set-group">
+    <div class="set-row set-row-static">
+      <span class="set-label">Di perangkat ini</span>
+      <span class="set-value muted" id="push-status">Memeriksa…</span>
+      <button type="button" class="set-btn" id="push-toggle" hidden>Aktifkan</button>
+    </div>
+    <form method="post" action="/prefs/remind" class="set-row set-row-static">
+      <span class="set-label">Ingatkan sebelum deadline</span>
+      <span class="set-seg set-seg-wrap">
+        {{range .RemindChoices}}
+        <label>
+          <input type="radio" name="minutes" value="{{.Minutes}}" {{if eq .Minutes $.RemindLead}}checked{{end}} onchange="this.form.submit()">
+          <span>{{.Label}}</span>
+        </label>
+        {{end}}
+      </span>
+    </form>
+    <div class="set-row set-row-static" id="push-test-row" hidden>
+      <span class="set-label">Kirim notifikasi uji</span>
+      <button type="button" class="set-btn" id="push-test">Kirim</button>
+    </div>
+  </div>
+  <p class="set-hint set-hint-pad">Pengingat dikirim sekali per task, sebelum deadline. {{if .PushDevices}}{{.PushDevices}} perangkat terdaftar.{{else}}Belum ada perangkat terdaftar.{{end}}</p>
+</section>
+
 <!-- Arsip -->
 <section class="set-section">
   <div class="set-group">
@@ -214,4 +242,69 @@
     <button type="submit" class="set-row set-logout">Keluar</button>
   </form>
 </section>
+
+<script>
+(function () {
+  var sec = document.getElementById('push-section');
+  if (!sec) return;
+  var statusEl = document.getElementById('push-status');
+  var btn = document.getElementById('push-toggle');
+  var testRow = document.getElementById('push-test-row');
+  var testBtn = document.getElementById('push-test');
+  var key = sec.getAttribute('data-key');
+
+  function say(t) { statusEl.textContent = t; }
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+    say('Tidak didukung browser ini. Di iPhone, pasang dulu ke Home Screen.');
+    return;
+  }
+  function b64(s) {
+    var p = '='.repeat((4 - s.length % 4) % 4), r = atob((s + p).replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from(r, function (c) { return c.charCodeAt(0); });
+  }
+  function post(url, body) {
+    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}), credentials: 'same-origin' });
+  }
+  var reg, current;
+  function render() {
+    btn.hidden = false;
+    if (Notification.permission === 'denied') { say('Diblokir di pengaturan browser'); btn.hidden = true; testRow.hidden = true; return; }
+    say(current ? 'Aktif' : 'Mati');
+    btn.textContent = current ? 'Matikan' : 'Aktifkan';
+    testRow.hidden = !current;
+  }
+  navigator.serviceWorker.ready.then(function (r) {
+    reg = r; return r.pushManager.getSubscription();
+  }).then(function (s) { current = s; render(); }).catch(function () { say('Gagal memeriksa'); });
+
+  btn.addEventListener('click', function () {
+    btn.disabled = true;
+    var job;
+    if (current) {
+      var sub = current;
+      job = post('/push/unsubscribe', { endpoint: sub.endpoint }).then(function () { return sub.unsubscribe(); }).then(function () { current = null; });
+    } else {
+      job = Notification.requestPermission().then(function (perm) {
+        if (perm !== 'granted') throw new Error('denied');
+        return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(key) });
+      }).then(function (s) {
+        var j = s.toJSON();
+        return post('/push/subscribe', { endpoint: j.endpoint, keys: j.keys }).then(function (res) {
+          if (!res.ok) { s.unsubscribe(); throw new Error('server'); }
+          current = s;
+        });
+      });
+    }
+    job.catch(function (e) { say(e && e.message === 'denied' ? 'Izin ditolak' : 'Gagal, coba lagi'); })
+      .then(function () { btn.disabled = false; if (statusEl.textContent.indexOf('Gagal') < 0 && statusEl.textContent !== 'Izin ditolak') render(); });
+  });
+
+  testBtn.addEventListener('click', function () {
+    testBtn.disabled = true;
+    post('/push/test').then(function (r) { say(r.ok ? 'Uji terkirim' : 'Uji gagal'); })
+      .catch(function () { say('Uji gagal'); })
+      .then(function () { testBtn.disabled = false; });
+  });
+})();
+</script>
 {{end}}

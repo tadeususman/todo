@@ -1873,3 +1873,6 @@ body.bulk-on .fab { display: none; }
 .audit-row { padding: .625rem .875rem; background: var(--surface-alt); border-radius: 12px; font-size: .8125rem; display: flex; flex-direction: column; gap: .125rem; }
 .audit-row b { font-size: .875rem; }
 .audit-meta { color: var(--text-muted); }
+
+.set-seg-wrap { flex-wrap: wrap; justify-content: flex-end; }
+.set-hint-pad { padding: .5rem 1rem 0; }

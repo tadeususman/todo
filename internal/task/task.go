@@ -198,6 +198,7 @@ func Update(ctx context.Context, db *sql.DB, userID, id int64, f UpdateFields) e
 		    description = $2,
 		    priority = $3,
 		    complexity = $4,
+		    reminded_at = CASE WHEN deadline IS DISTINCT FROM $5::timestamptz THEN NULL ELSE reminded_at END,
 		    deadline = $5,
 		    estimated_minutes = $6,
 		    updated_at = now()
