@@ -134,7 +134,8 @@ func isTrusted(ip net.IP) bool {
 	return false
 }
 
-// clientIP returns the peer address, or X-Real-IP only when the peer is a trusted proxy.
+// clientIP returns the peer address. When the peer is a trusted proxy it returns the address the proxy reports:
+// CF-Connecting-IP (Cloudflare Tunnel; set by Cloudflare's edge, clients can't override it) or X-Real-IP (nginx etc.).
 // ClientIP is the exported form of clientIP.
 func ClientIP(r *http.Request) string { return clientIP(r) }
 
@@ -143,10 +144,12 @@ func clientIP(r *http.Request) string {
 	if err != nil {
 		host = r.RemoteAddr
 	}
-	if xr := r.Header.Get("X-Real-IP"); xr != "" {
-		if peer := net.ParseIP(host); peer != nil && isTrusted(peer) {
-			if ip := net.ParseIP(strings.TrimSpace(xr)); ip != nil {
-				return ip.String()
+	if peer := net.ParseIP(host); peer != nil && isTrusted(peer) {
+		for _, h := range []string{"CF-Connecting-IP", "X-Real-IP"} {
+			if v := r.Header.Get(h); v != "" {
+				if ip := net.ParseIP(strings.TrimSpace(v)); ip != nil {
+					return ip.String()
+				}
 			}
 		}
 	}

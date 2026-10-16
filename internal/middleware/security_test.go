@@ -28,6 +28,20 @@ func TestClientIPTrustsHeaderOnlyFromProxy(t *testing.T) {
 	}
 }
 
+func TestClientIPCloudflareTunnel(t *testing.T) {
+	r := httptest.NewRequest("GET", "/", nil)
+	r.RemoteAddr = "127.0.0.1:50000" // cloudflared on the same host
+	r.Header.Set("CF-Connecting-IP", "198.51.100.20")
+	r.Header.Set("X-Real-IP", "6.6.6.6")
+	if got := clientIP(r); got != "198.51.100.20" {
+		t.Errorf("got %s, want the Cloudflare-reported client", got)
+	}
+	r.RemoteAddr = "203.0.113.9:1" // direct internet peer must not be able to claim an address
+	if got := clientIP(r); got != "203.0.113.9" {
+		t.Errorf("spoofed CF-Connecting-IP accepted from untrusted peer: %s", got)
+	}
+}
+
 func TestSecurityHeaders(t *testing.T) {
 	h := SecurityHeaders(nilHandler{})
 	r := httptest.NewRequest("GET", "/", nil)
