@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -73,13 +74,66 @@ func NewLoginLimiter(max int, window time.Duration) *LoginLimiter {
 	return &LoginLimiter{max: max, window: window, hits: map[string][]time.Time{}}
 }
 
-func clientIP(r *http.Request) string {
-	if ip := r.Header.Get("X-Real-IP"); ip != "" {
-		return ip
+// trustedProxies lists networks allowed to set X-Real-IP. Default: loopback and private ranges,
+// i.e. a reverse proxy on the host or docker network, never a client on the public internet.
+var trustedProxies = mustParseCIDRs("127.0.0.0/8", "::1/128", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "fc00::/7")
+
+func mustParseCIDRs(cidrs ...string) []*net.IPNet {
+	nets, err := ParseCIDRs(cidrs)
+	if err != nil {
+		panic(err)
 	}
+	return nets
+}
+
+// ParseCIDRs parses CIDRs or bare IPs.
+func ParseCIDRs(items []string) ([]*net.IPNet, error) {
+	var nets []*net.IPNet
+	for _, it := range items {
+		it = strings.TrimSpace(it)
+		if it == "" {
+			continue
+		}
+		if !strings.Contains(it, "/") {
+			if strings.Contains(it, ":") {
+				it += "/128"
+			} else {
+				it += "/32"
+			}
+		}
+		_, n, err := net.ParseCIDR(it)
+		if err != nil {
+			return nil, err
+		}
+		nets = append(nets, n)
+	}
+	return nets, nil
+}
+
+// SetTrustedProxies overrides the default trusted proxy networks.
+func SetTrustedProxies(nets []*net.IPNet) { trustedProxies = nets }
+
+func isTrusted(ip net.IP) bool {
+	for _, n := range trustedProxies {
+		if n.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+// clientIP returns the peer address, or X-Real-IP only when the peer is a trusted proxy.
+func clientIP(r *http.Request) string {
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
-		return r.RemoteAddr
+		host = r.RemoteAddr
+	}
+	if xr := r.Header.Get("X-Real-IP"); xr != "" {
+		if peer := net.ParseIP(host); peer != nil && isTrusted(peer) {
+			if ip := net.ParseIP(strings.TrimSpace(xr)); ip != nil {
+				return ip.String()
+			}
+		}
 	}
 	return host
 }

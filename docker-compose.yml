@@ -26,6 +26,7 @@ services:
       DATABASE_URL: postgres://todo:${POSTGRES_PASSWORD:-changeme}@db:5432/todo?sslmode=disable
       SESSION_SECRET: ${SESSION_SECRET:?set a random secret in .env}
       TZ: ${TZ:-Asia/Jakarta}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
 
       ADMIN_USERNAME: ${ADMIN_USERNAME:-tade}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set admin password in .env}
@@ -36,7 +37,7 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.0-flash}
     ports:
-      - "8083:8080"
+      - "127.0.0.1:8083:8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:

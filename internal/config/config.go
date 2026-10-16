@@ -8,10 +8,11 @@ import (
 const Version = "0.1.0"
 
 type Config struct {
-	AppPort       string
-	DBUrl         string
-	SessionSecret string
-	TZ            string
+	AppPort        string
+	DBUrl          string
+	SessionSecret  string
+	TZ             string
+	TrustedProxies string // comma-separated CIDRs/IPs allowed to set X-Real-IP (empty = loopback+private)
 
 	AdminUsername string
 	AdminPassword string
@@ -25,10 +26,11 @@ type Config struct {
 
 func Load() Config {
 	return Config{
-		AppPort:       getEnv("APP_PORT", "8080"),
-		DBUrl:         mustEnv("DATABASE_URL"),
-		SessionSecret: mustEnv("SESSION_SECRET"),
-		TZ:            getEnv("TZ", "Asia/Jakarta"),
+		AppPort:        getEnv("APP_PORT", "8080"),
+		DBUrl:          mustEnv("DATABASE_URL"),
+		SessionSecret:  mustEnv("SESSION_SECRET"),
+		TZ:             getEnv("TZ", "Asia/Jakarta"),
+		TrustedProxies: os.Getenv("TRUSTED_PROXIES"),
 
 		AdminUsername: getEnv("ADMIN_USERNAME", "tade"),
 		AdminPassword: mustEnv("ADMIN_PASSWORD"),

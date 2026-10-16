@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -26,6 +27,14 @@ func main() {
 	_ = godotenv.Load() // optional: in docker-compose env is injected
 	cfg := appconfig.Load()
 	ctx := context.Background()
+
+	if cfg.TrustedProxies != "" {
+		nets, err := authmw.ParseCIDRs(strings.Split(cfg.TrustedProxies, ","))
+		if err != nil {
+			log.Fatalf("TRUSTED_PROXIES: %v", err)
+		}
+		authmw.SetTrustedProxies(nets)
+	}
 
 	pool, err := appdb.Connect(ctx, cfg.DBUrl)
 	if err != nil {
