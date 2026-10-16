@@ -1,10 +1,10 @@
 module todo
 
-go 1.22.2
+go 1.26.0
 
 require (
-	github.com/go-chi/chi/v5 v5.1.0
+	github.com/go-chi/chi/v5 v5.5.0
 	github.com/joho/godotenv v1.5.1
-	github.com/lib/pq v1.10.9
-	golang.org/x/crypto v0.17.0
+	github.com/lib/pq v1.12.3
+	golang.org/x/crypto v0.58.0
 )

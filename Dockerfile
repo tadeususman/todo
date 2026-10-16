@@ -1,5 +1,5 @@
 # ---- build stage ----
-FROM golang:1.23-alpine AS build
+FROM golang:1.26-alpine AS build
 WORKDIR /app
 
 COPY go.mod go.sum ./
@@ -9,7 +9,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o /todo ./cmd/server
 
 # ---- run stage ----
-FROM alpine:3.20
+FROM alpine:3.22
 WORKDIR /app
 
 RUN apk add --no-cache ca-certificates tzdata
