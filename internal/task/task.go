@@ -53,29 +53,49 @@ const selectCols = `
     t.title, t.description, t.status, t.priority, t.complexity,
     t.deadline, t.estimated_minutes, t.completed_at, t.created_at, t.updated_at`
 
+// ErrParentInvalid is returned when a subtask's parent doesn't exist or belongs to someone else.
+var ErrParentInvalid = errors.New("task induk tidak ditemukan")
+
+// Create inserts a task. projectID must belong to userID (0 = no project); callers can't be trusted with raw ids.
 func Create(ctx context.Context, db *sql.DB, userID int64, p *Parsed, projectID int64) (int64, error) {
 	var id int64
 	err := db.QueryRowContext(ctx, `
 		INSERT INTO tasks (user_id, project_id, title, description, priority, complexity, deadline, estimated_minutes)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		SELECT $1, $2, $3, $4, $5, $6, $7, $8
+		WHERE $2::bigint IS NULL OR EXISTS (SELECT 1 FROM projects WHERE id = $2 AND user_id = $1)
 		RETURNING id`,
-		userID, projectID, p.Title, p.Description, NormPriority(p.Priority),
+		userID, nullID(projectID), p.Title, p.Description, NormPriority(p.Priority),
 		NormComplexity(p.Complexity), p.Deadline, p.EstimatedMinutes,
 	).Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, ErrProjectInvalid
+	}
 	return id, err
 }
 
-// CreateSub inserts a task that lives under a parent task, inheriting its project.
+// CreateSub inserts a task that lives under a parent task. Both parentID and projectID must belong to userID.
 func CreateSub(ctx context.Context, db *sql.DB, userID, parentID int64, p *Parsed, projectID int64) (int64, error) {
 	var id int64
 	err := db.QueryRowContext(ctx, `
 		INSERT INTO tasks (user_id, parent_id, project_id, title, description, priority, complexity, deadline, estimated_minutes)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9
+		WHERE EXISTS (SELECT 1 FROM tasks WHERE id = $2 AND user_id = $1)
+		  AND ($3::bigint IS NULL OR EXISTS (SELECT 1 FROM projects WHERE id = $3 AND user_id = $1))
 		RETURNING id`,
-		userID, parentID, projectID, p.Title, p.Description, NormPriority(p.Priority),
+		userID, parentID, nullID(projectID), p.Title, p.Description, NormPriority(p.Priority),
 		NormComplexity(p.Complexity), p.Deadline, p.EstimatedMinutes,
 	).Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, ErrParentInvalid
+	}
 	return id, err
+}
+
+func nullID(id int64) any {
+	if id == 0 {
+		return nil
+	}
+	return id
 }
 
 func Get(ctx context.Context, db *sql.DB, userID, id int64) (*Task, error) {
