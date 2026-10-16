@@ -32,7 +32,7 @@ func Load() Config {
 		TZ:             getEnv("TZ", "Asia/Jakarta"),
 		TrustedProxies: os.Getenv("TRUSTED_PROXIES"),
 
-		AdminUsername: getEnv("ADMIN_USERNAME", "tade"),
+		AdminUsername: mustEnv("ADMIN_USERNAME"),
 		AdminPassword: mustEnv("ADMIN_PASSWORD"),
 
 		AIProvider:  getEnv("AI_PROVIDER", "bridge"),
