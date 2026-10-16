@@ -406,6 +406,9 @@ func (a *App) TaskBulk(w http.ResponseWriter, r *http.Request) {
 	case "delete":
 		n, err = task.DeleteMany(r.Context(), a.DB, uid, ids)
 		msg = strconv.FormatInt(n, 10) + " task dihapus."
+	case "done":
+		n, err = task.CompleteMany(r.Context(), a.DB, uid, ids)
+		msg = strconv.FormatInt(n, 10) + " task ditandai selesai."
 	case "archive":
 		n, err = task.ArchiveMany(r.Context(), a.DB, uid, ids)
 		msg = strconv.FormatInt(n, 10) + " task diarsipkan. Lihat di Setting → Arsip."

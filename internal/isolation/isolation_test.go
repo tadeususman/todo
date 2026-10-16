@@ -132,6 +132,9 @@ func TestBobCannotModifyAlicesData(t *testing.T) {
 	if n, _ := task.DeleteMany(ctx, f.db, f.bob, []int64{f.aTask, f.aSub}); n != 0 {
 		t.Error("DeleteMany removed alice's tasks")
 	}
+	if n, _ := task.CompleteMany(ctx, f.db, f.bob, []int64{f.aTask, f.aSub}); n != 0 {
+		t.Error("CompleteMany completed alice's tasks")
+	}
 	if n, _ := task.ArchiveMany(ctx, f.db, f.bob, []int64{f.aTask}); n != 0 {
 		t.Error("ArchiveMany touched alice's task")
 	}

@@ -59,6 +59,7 @@
   <input type="hidden" name="redirect" value="{{$r}}">
   <span class="bulk-count" id="bulk-count" aria-live="polite">0 dipilih</span>
   <button type="button" class="bulk-btn" id="bulk-all">Semua</button>
+  <button type="submit" class="bulk-btn bulk-done" name="action" value="done" id="bulk-done">Selesaikan</button>
   <button type="submit" class="bulk-btn bulk-archive" name="action" value="archive" id="bulk-archive">Arsipkan</button>
   <button type="button" class="bulk-btn bulk-delete" id="bulk-delete">Hapus</button>
   <button type="button" class="bulk-btn" id="bulk-cancel">Batal</button>
@@ -76,6 +77,7 @@
   function refresh() {
     var n = checked().length, total = boxes().length;
     count.textContent = n + ' dipilih';
+    document.getElementById('bulk-done').disabled = n === 0;
     document.getElementById('bulk-archive').disabled = n === 0;
     document.getElementById('bulk-delete').disabled = n === 0;
     document.getElementById('bulk-all').textContent = (n === total && total > 0) ? 'Kosongkan' : 'Semua';

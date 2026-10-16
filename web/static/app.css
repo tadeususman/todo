@@ -1885,3 +1885,5 @@ body.bulk-on .fab { display: none; }
 .search-box input::-webkit-search-cancel-button { -webkit-appearance: none; }
 .chip-row-tight { margin-top: -1rem; }
 .chip-clear { color: var(--text-muted); background: transparent; box-shadow: inset 0 0 0 1px var(--border-soft); }
+
+.bulk-done { background: var(--accent-strong); color: #04281c; border-color: transparent; }

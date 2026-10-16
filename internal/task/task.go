@@ -312,6 +312,21 @@ func ArchiveMany(ctx context.Context, db *sql.DB, userID int64, ids []int64) (in
 	return res.RowsAffected()
 }
 
+// CompleteMany marks the user's open tasks among ids as done (sub-tasks are left as they are, like completing one task).
+func CompleteMany(ctx context.Context, db *sql.DB, userID int64, ids []int64) (int64, error) {
+	if len(ids) == 0 {
+		return 0, nil
+	}
+	res, err := db.ExecContext(ctx, `
+		UPDATE tasks SET status = 'done', completed_at = now(), updated_at = now()
+		WHERE user_id = $1 AND status <> 'done' AND id = ANY($2)`,
+		userID, pq.Array(ids))
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
+}
+
 func scanTasks(rows *sql.Rows) ([]Task, error) {
 	var out []Task
 	for rows.Next() {
