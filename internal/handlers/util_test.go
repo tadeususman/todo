@@ -16,6 +16,9 @@ func TestSafeRedirect(t *testing.T) {
 		"/\\evil.com":  "/home",
 		"https://x.io": "/home",
 		"":             "/home",
+		"/\t/evil.com": "/home",
+		"/\n/evil.com": "/home",
+		"/a\\b":        "/home",
 	}
 	for in, want := range cases {
 		if got := safeRedirect(in, "/home"); got != want {
@@ -116,5 +119,17 @@ func TestDayLabelAndChatItems(t *testing.T) {
 	}
 	if len(chatItems(nil, now)) != 0 {
 		t.Error("empty")
+	}
+}
+
+func TestRenderMarkdownEscapesHTML(t *testing.T) {
+	got := string(renderMarkdown(`<script>alert(1)</script> **b** <img src=x onerror=alert(1)> ` + "`<b>`"))
+	for _, bad := range []string{"<script", "<img", "<b>"} {
+		if strings.Contains(got, bad) {
+			t.Errorf("unescaped %q in %q", bad, got)
+		}
+	}
+	if !strings.Contains(got, "<strong>b</strong>") {
+		t.Errorf("bold lost: %q", got)
 	}
 }

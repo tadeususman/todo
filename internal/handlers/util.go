@@ -39,6 +39,10 @@ func safeRedirect(target, fallback string) string {
 	if !strings.HasPrefix(target, "/") || strings.HasPrefix(target, "//") || strings.HasPrefix(target, "/\\") {
 		return fallback
 	}
+	// Browsers drop tabs/newlines inside URLs, so "/\t/evil.com" would become "//evil.com".
+	if strings.ContainsAny(target, "\t\r\n\\") {
+		return fallback
+	}
 	return target
 }
 

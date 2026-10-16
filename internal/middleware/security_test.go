@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func TestClientIPTrustsHeaderOnlyFromProxy(t *testing.T) {
@@ -43,3 +44,44 @@ func TestSecurityHeaders(t *testing.T) {
 type nilHandler struct{}
 
 func (nilHandler) ServeHTTP(http.ResponseWriter, *http.Request) {}
+
+func TestSameOriginBlocksCrossSitePost(t *testing.T) {
+	h := SameOrigin(nilHandler{})
+	cases := []struct {
+		name, method, origin, referer string
+		want                          int
+	}{
+		{"cross-site origin", "POST", "https://evil.example", "", 403},
+		{"cross-site referer", "POST", "", "https://evil.example/x", 403},
+		{"same origin", "POST", "http://todo.test", "", 200},
+		{"GET never blocked", "GET", "https://evil.example", "", 200},
+	}
+	for _, c := range cases {
+		r := httptest.NewRequest(c.method, "http://todo.test/tasks/1/delete", nil)
+		if c.origin != "" {
+			r.Header.Set("Origin", c.origin)
+		}
+		if c.referer != "" {
+			r.Header.Set("Referer", c.referer)
+		}
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		if w.Code != c.want {
+			t.Errorf("%s: got %d want %d", c.name, w.Code, c.want)
+		}
+	}
+}
+
+func TestLoginLimiterByKey(t *testing.T) {
+	l := NewLoginLimiter(3, time.Minute)
+	for i := 0; i < 3; i++ {
+		l.FailKey("alice")
+	}
+	if !l.BlockedKey("alice") || l.BlockedKey("bob") {
+		t.Error("limiter must block only the failing key")
+	}
+	l.ResetKey("alice")
+	if l.BlockedKey("alice") {
+		t.Error("reset should unblock")
+	}
+}
