@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
 const Version = "0.1.0"
@@ -11,6 +12,10 @@ const Version = "0.1.0"
 type Config struct {
 	AppPort            string
 	DBUrl              string
+	PublicURL          string // https://todo.example.com, used in emailed links (never derived from the Host header)
+	SMTPHost, SMTPPort string
+	SMTPUser, SMTPPass string
+	SMTPFrom           string
 	AILogRetentionDays int // ai_logs older than this are purged
 	TZ                 string
 	TrustedProxies     string // comma-separated CIDRs/IPs allowed to set X-Real-IP (empty = loopback+private)
@@ -29,6 +34,12 @@ func Load() Config {
 	return Config{
 		AppPort:            getEnv("APP_PORT", "8080"),
 		DBUrl:              mustEnv("DATABASE_URL"),
+		PublicURL:          strings.TrimRight(os.Getenv("PUBLIC_URL"), "/"),
+		SMTPHost:           os.Getenv("SMTP_HOST"),
+		SMTPPort:           getEnv("SMTP_PORT", "587"),
+		SMTPUser:           os.Getenv("SMTP_USER"),
+		SMTPPass:           os.Getenv("SMTP_PASS"),
+		SMTPFrom:           os.Getenv("SMTP_FROM"),
 		AILogRetentionDays: getEnvInt("AI_LOG_RETENTION_DAYS", 30),
 		TZ:                 getEnv("TZ", "Asia/Jakarta"),
 		TrustedProxies:     os.Getenv("TRUSTED_PROXIES"),

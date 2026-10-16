@@ -21,10 +21,12 @@ import (
 	appdb "todo/internal/db"
 	"todo/internal/handlers"
 	"todo/internal/llm"
+	"todo/internal/mail"
 	authmw "todo/internal/middleware"
 	"todo/internal/prefs"
 	"todo/internal/project"
 	"todo/internal/session"
+	"todo/internal/user"
 )
 
 func main() {
@@ -67,6 +69,7 @@ func main() {
 			if err := sessions.PurgeExpired(ctx); err != nil {
 				log.Printf("purge sessions: %v", err)
 			}
+			_ = user.PurgeResets(ctx, pool)
 			// Retensi: isi chat/prompt LLM disimpan sementara saja; audit log lebih lama.
 			if _, err := pool.ExecContext(ctx, `DELETE FROM ai_logs WHERE created_at < now() - make_interval(days => $1)`, cfg.AILogRetentionDays); err != nil {
 				log.Printf("purge ai_logs: %v", err)
@@ -92,6 +95,9 @@ func main() {
 		LLM:            aiClient,
 		Limiter:        authmw.NewLoginLimiter(5, 15*time.Minute),
 		AccountLimiter: authmw.NewLoginLimiter(10, 15*time.Minute),
+		ResetLimiter:   authmw.NewLoginLimiter(3, time.Hour),
+		Mail:           mail.Config{Host: cfg.SMTPHost, Port: cfg.SMTPPort, User: cfg.SMTPUser, Pass: cfg.SMTPPass, From: cfg.SMTPFrom},
+		PublicURL:      cfg.PublicURL,
 		RegLimiter:     authmw.NewLoginLimiter(5, time.Hour),
 		Pages:          tmpl,
 	}
@@ -139,6 +145,11 @@ func main() {
 	r.Post("/logout", app.Logout)
 	r.Get("/register", app.RegisterPage)
 	r.Post("/register", app.RegisterSubmit)
+	r.Get("/privasi", app.PrivacyPage)
+	r.Get("/forgot", app.ForgotPage)
+	r.Post("/forgot", app.ForgotSubmit)
+	r.Get("/reset/{token}", app.ResetPage)
+	r.Post("/reset", app.ResetSubmit)
 
 	// authenticated
 	r.Group(func(r chi.Router) {
@@ -173,10 +184,13 @@ func main() {
 		r.Post("/account/username", app.AccountUsername)
 		r.Post("/account/email", app.AccountEmail)
 		r.Post("/account/password", app.AccountPassword)
+		r.Get("/account/export", app.AccountExport)
+		r.Post("/account/delete", app.AccountDelete)
 
 		r.Group(func(r chi.Router) {
 			r.Use(authmw.RequireAdmin(pool))
 			r.Get("/admin/users", app.AdminUsers)
+			r.Get("/admin/audit", app.AdminAudit)
 			r.Post("/admin/users/{id}/approve", app.AdminApprove())
 			r.Post("/admin/users/{id}/reject", app.AdminReject())
 			r.Post("/admin/users/{id}/reset-password", app.AdminResetPassword)

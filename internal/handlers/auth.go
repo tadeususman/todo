@@ -100,7 +100,7 @@ func (a *App) RegisterSubmit(w http.ResponseWriter, r *http.Request) {
 
 // isUserFacing reports whether err is a validation error whose message is safe to show.
 func isUserFacing(err error) bool {
-	for _, e := range []error{user.ErrUsernameInvalid, user.ErrUsernameTaken, user.ErrEmailInvalid, user.ErrEmailTaken, user.ErrPasswordShort, user.ErrPasswordLong, user.ErrPasswordWrong, user.ErrPasswordCommon} {
+	for _, e := range []error{user.ErrUsernameInvalid, user.ErrUsernameTaken, user.ErrEmailInvalid, user.ErrEmailTaken, user.ErrPasswordShort, user.ErrPasswordLong, user.ErrPasswordWrong, user.ErrPasswordCommon, user.ErrLastAdmin} {
 		if errors.Is(err, e) {
 			return true
 		}

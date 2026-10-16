@@ -179,6 +179,35 @@
   </div>
 </section>
 
+<!-- Privasi & data -->
+<section class="set-section">
+  <h2 class="set-title">Privasi &amp; data</h2>
+  <div class="set-group">
+    <a href="/privasi" class="set-row">
+      <span class="set-label">Kebijakan privasi</span>
+      <span class="set-value"></span>
+      <svg class="set-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <a href="/account/export" class="set-row" download>
+      <span class="set-label">Unduh data saya</span>
+      <span class="set-value muted">JSON</span>
+      <svg class="set-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <details class="set-item">
+      <summary class="set-row">
+        <span class="set-label">Hapus akun</span>
+        <span class="set-value"></span>
+        <svg class="set-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </summary>
+      <form method="post" action="/account/delete" class="set-form set-form-stack" data-confirm="Hapus akun dan semua datanya secara permanen? Ini tidak bisa dibatalkan.">
+        <p class="set-hint">Semua task, project, dan chat-mu dihapus permanen. Masukkan password untuk melanjutkan.</p>
+        <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
+        <button type="submit" class="set-link-danger">Hapus akun permanen</button>
+      </form>
+    </details>
+  </div>
+</section>
+
 <!-- Keluar -->
 <section class="set-section">
   <form method="post" action="/logout" class="set-group">

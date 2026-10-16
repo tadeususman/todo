@@ -293,3 +293,36 @@ func SetStatus(ctx context.Context, db *sql.DB, id int64, status string) error {
 	}
 	return err
 }
+
+var ErrLastAdmin = errors.New("Kamu admin terakhir; tidak bisa menghapus akun ini.")
+
+// DeleteAccount permanently removes the user and, via ON DELETE CASCADE, all their data.
+// The password must match, and the last approved admin can't delete itself.
+func DeleteAccount(ctx context.Context, db *sql.DB, id int64, password string) error {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	var hash string
+	var isAdmin bool
+	if err := tx.QueryRowContext(ctx, `SELECT password_hash, is_admin FROM users WHERE id = $1 FOR UPDATE`, id).Scan(&hash, &isAdmin); err != nil {
+		return err
+	}
+	if bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) != nil {
+		return ErrPasswordWrong
+	}
+	if isAdmin {
+		var others int
+		if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM users WHERE is_admin AND status = 'approved' AND id <> $1`, id).Scan(&others); err != nil {
+			return err
+		}
+		if others == 0 {
+			return ErrLastAdmin
+		}
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM users WHERE id = $1`, id); err != nil {
+		return err
+	}
+	return tx.Commit()
+}

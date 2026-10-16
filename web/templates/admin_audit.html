@@ -1,0 +1,25 @@
+{{define "content"}}
+<header class="detail-top">
+  <a href="/admin/users" class="back-link" aria-label="Kembali">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+    User
+  </a>
+</header>
+<header class="hero">
+  <div>
+    <p class="eyebrow">Admin</p>
+    <h1>Log keamanan</h1>
+  </div>
+  <span class="hero-count">200 terbaru</span>
+</header>
+<ul class="audit-list">
+  {{range .Rows}}
+  <li class="audit-row">
+    <span><b>{{.Action}}</b>{{if .Target}} · {{.Target}}{{end}}</span>
+    <span class="audit-meta">{{.Actor}} · {{.IP}} · {{(wib .When).Format "02 Jan 2006, 15:04:05"}}</span>
+  </li>
+  {{else}}
+  <li class="audit-row">Belum ada catatan.</li>
+  {{end}}
+</ul>
+{{end}}

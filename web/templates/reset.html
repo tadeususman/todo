@@ -1,0 +1,23 @@
+{{define "content"}}
+<div class="auth-container">
+  {{template "authbrand"}}
+  <h1 class="auth-title">Password baru</h1>
+
+  {{if .Error}}<div class="error">{{.Error}}</div>{{end}}
+
+  <form method="post" action="/reset" class="stack" novalidate data-validate>
+    <input type="hidden" name="token" value="{{.Token}}">
+    <label class="field">
+      <span>Password baru</span>
+      <input type="password" name="new" autocomplete="new-password" required minlength="8" maxlength="72" autofocus>
+    </label>
+    <label class="field">
+      <span>Ulangi password</span>
+      <input type="password" name="confirm" autocomplete="new-password" required minlength="8" maxlength="72">
+    </label>
+    <button type="submit">Simpan password</button>
+  </form>
+</div>
+
+<script>document.body.classList.add('auth')</script>
+{{end}}

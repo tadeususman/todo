@@ -1,0 +1,26 @@
+{{define "content"}}
+<div class="auth-container">
+  {{template "authbrand"}}
+  <h1 class="auth-title">Lupa password</h1>
+
+  {{if .Error}}<div class="error">{{.Error}}</div>{{end}}
+  {{if .Info}}<div class="info">{{.Info}}</div>{{end}}
+
+  {{if .ResetEnabled}}
+    {{if not .Sent}}
+    <form method="post" action="/forgot" class="stack" novalidate data-validate>
+      <label class="field">
+        <span>Email akun</span>
+        <input type="email" name="email" autocomplete="email" required autofocus maxlength="254">
+      </label>
+      <button type="submit">Kirim tautan reset</button>
+    </form>
+    {{end}}
+  {{else}}
+    <div class="info">Reset lewat email belum diaktifkan. Hubungi admin untuk meminta password sementara.</div>
+  {{end}}
+  <p class="auth-alt"><a href="/login">Kembali ke login</a></p>
+</div>
+
+<script>document.body.classList.add('auth')</script>
+{{end}}

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"todo/internal/llm"
+	"todo/internal/mail"
 	authmw "todo/internal/middleware"
 	"todo/internal/prefs"
 	"todo/internal/session"
@@ -116,6 +117,9 @@ type App struct {
 	LLM            *llm.Client
 	AccountLimiter *authmw.LoginLimiter // per-username, catches distributed guessing
 	Limiter        *authmw.LoginLimiter
+	ResetLimiter   *authmw.LoginLimiter
+	Mail           mail.Config
+	PublicURL      string
 	RegLimiter     *authmw.LoginLimiter
 	Pages          map[string]*template.Template // one fully-parsed set per page, built at startup
 }
@@ -183,6 +187,7 @@ func (a *App) render(w http.ResponseWriter, r *http.Request, name string, data m
 	data["Theme"] = theme
 	data["Font"] = font
 	data["Size"] = size
+	data["ResetEnabled"] = a.resetEnabled()
 	if msg := popFlash(w, r); msg != "" {
 		data["Flash"] = msg
 	}

@@ -37,6 +37,13 @@ services:
       ADMIN_USERNAME: ${ADMIN_USERNAME:?set ADMIN_USERNAME in .env}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set admin password in .env}
 
+      PUBLIC_URL: ${PUBLIC_URL:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+
       AI_PROVIDER: ${AI_PROVIDER:-bridge}
       BRIDGE_URL: ${BRIDGE_URL:-http://host.docker.internal:8765}
       BRIDGE_MODEL: ${BRIDGE_MODEL:-claude-sonnet-4-6}

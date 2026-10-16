@@ -1,0 +1,50 @@
+{{define "content"}}
+<header class="detail-top">
+  <a href="javascript:history.back()" class="back-link" aria-label="Kembali">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+    Kembali
+  </a>
+</header>
+<header class="hero">
+  <div>
+    <p class="eyebrow">Informasi</p>
+    <h1>Kebijakan privasi</h1>
+  </div>
+</header>
+
+<div class="prose">
+  <p>todo adalah aplikasi pengelola tugas yang dijalankan secara pribadi oleh admin. Halaman ini menjelaskan data apa yang disimpan dan ke mana data itu mengalir.</p>
+
+  <h2>Data yang disimpan</h2>
+  <ul>
+    <li><b>Akun:</b> username, email, dan password (disimpan sebagai hash bcrypt, bukan teks asli).</li>
+    <li><b>Isi aplikasi:</b> task, subtask, project, arsip, dan riwayat chat dengan asisten.</li>
+    <li><b>Preferensi:</b> tema, font, dan ukuran teks.</li>
+    <li><b>Sesi:</b> satu cookie sesi (<code>todo_session</code>) agar tetap masuk selama 30 hari, dan cookie pesan singkat yang hilang dalam semenit.</li>
+    <li><b>Log keamanan:</b> catatan login (berhasil dan gagal), perubahan password, serta tindakan admin, lengkap dengan alamat IP dan waktu. Disimpan hingga 365 hari.</li>
+  </ul>
+
+  <h2>Asisten AI</h2>
+  <p>Teks yang kamu ketik di kolom tambah task dan di chat dikirim ke penyedia model bahasa (Claude melalui layanan perantara milik admin, atau Gemini bila admin mengaktifkannya) untuk diubah menjadi task atau dijawab. Jangan menulis data yang tidak ingin diproses layanan tersebut, misalnya kata sandi atau data kesehatan. Salinan masukan dan keluaran disimpan di server untuk keperluan pemeriksaan dan dihapus otomatis setelah 30 hari.</p>
+
+  <h2>Pihak ketiga</h2>
+  <ul>
+    <li>Jika kamu memilih font selain bawaan sistem, browsermu mengunduhnya dari Google Fonts, sehingga Google melihat alamat IP-mu.</li>
+    <li>Pustaka htmx dimuat dari unpkg.com.</li>
+    <li>Jika fitur lupa password aktif, email reset dikirim lewat server SMTP yang dikonfigurasi admin.</li>
+  </ul>
+
+  <h2>Siapa yang bisa melihat datamu</h2>
+  <p>Pengguna lain tidak bisa melihat tugasmu. Admin dapat melihat username, email, dan status akun, serta mereset password. Admin sistem secara teknis memiliki akses ke database server, sehingga percayakan data hanya pada instalasi yang kamu percaya.</p>
+
+  <h2>Hak dan kendalimu</h2>
+  <ul>
+    <li><b>Unduh datamu</b> kapan saja dari Setting → Privasi &amp; data (format JSON).</li>
+    <li><b>Hapus akun</b> dari tempat yang sama. Semua task, project, dan chat dihapus permanen. Salinan di cadangan (backup) hilang sesuai masa simpan cadangan, paling lama 14 hari.</li>
+    <li>Ubah username, email, dan password di Setting → Akun.</li>
+  </ul>
+
+  <h2>Kontak</h2>
+  <p>Pertanyaan soal data atau permintaan bantuan, hubungi admin instalasi ini.</p>
+</div>
+{{end}}
