@@ -13,7 +13,7 @@
 </header>
 
 <div class="prose">
-  <p>todo adalah aplikasi pengelola tugas yang dijalankan secara pribadi oleh admin. Halaman ini menjelaskan data apa yang disimpan dan ke mana data itu mengalir.</p>
+  <p>todo adalah aplikasi pengelola tugas yang dikelola oleh Sonade. Halaman ini menjelaskan data apa yang disimpan dan ke mana data itu mengalir.</p>
 
   <h2>Data yang disimpan</h2>
   <ul>
@@ -21,20 +21,21 @@
     <li><b>Isi aplikasi:</b> task, subtask, project, arsip, dan riwayat chat dengan asisten.</li>
     <li><b>Preferensi:</b> tema, font, dan ukuran teks.</li>
     <li><b>Sesi:</b> satu cookie sesi (<code>todo_session</code>) agar tetap masuk selama 30 hari, dan cookie pesan singkat yang hilang dalam semenit.</li>
+    <li><b>Notifikasi:</b> jika kamu mengaktifkan notifikasi, perangkatmu mendaftarkan alamat push (endpoint dan kunci) ke server. Alamat ini hanya dipakai untuk mengirim pengingat tugas, dan dihapus saat notifikasi dimatikan atau akun dihapus.</li>
     <li><b>Log keamanan:</b> catatan login (berhasil dan gagal), perubahan password, serta tindakan admin, lengkap dengan alamat IP dan waktu. Disimpan hingga 365 hari.</li>
   </ul>
 
   <h2>Asisten AI</h2>
-  <p>Teks yang kamu ketik di kolom tambah task dan di chat dikirim ke penyedia model bahasa (Claude melalui layanan perantara milik admin, atau Gemini bila admin mengaktifkannya) untuk diubah menjadi task atau dijawab. Jangan menulis data yang tidak ingin diproses layanan tersebut, misalnya kata sandi atau data kesehatan. Salinan masukan dan keluaran disimpan di server untuk keperluan pemeriksaan dan dihapus otomatis setelah 30 hari.</p>
+  <p>Teks yang kamu ketik di kolom tambah task dan di chat dikirim ke penyedia model bahasa (Claude melalui layanan perantara milik pengelola, atau Gemini bila pengelola mengaktifkannya) untuk diubah menjadi task atau dijawab. Jangan menulis data yang tidak ingin diproses layanan tersebut, misalnya kata sandi atau data kesehatan. Salinan masukan dan keluaran disimpan di server untuk keperluan pemeriksaan dan dihapus otomatis setelah 30 hari.</p>
 
   <h2>Pihak ketiga</h2>
   <ul>
     <li>Jika kamu memilih font selain bawaan sistem, browsermu mengunduhnya dari Google Fonts, sehingga Google melihat alamat IP-mu.</li>
-    <li>Jika fitur lupa password aktif, email reset dikirim lewat server SMTP yang dikonfigurasi admin.</li>
+    <li>Jika fitur lupa password aktif, email reset dikirim lewat server SMTP yang dikonfigurasi pengelola.</li>
   </ul>
 
   <h2>Siapa yang bisa melihat datamu</h2>
-  <p>Pengguna lain tidak bisa melihat tugasmu. Admin dapat melihat username, email, dan status akun, serta mereset password. Admin sistem secara teknis memiliki akses ke database server, sehingga percayakan data hanya pada instalasi yang kamu percaya.</p>
+  <p>Pengguna lain tidak bisa melihat tugasmu. Admin dapat melihat username, email, dan status akun, serta mereset password. Isi tugas, project, dan chatmu bersifat pribadi: pengelola berkomitmen tidak membukanya dan tidak menampilkannya di halaman admin. Secara teknis pengelola memiliki akses ke server, jadi komitmen ini adalah janji kebijakan, bukan pembatasan teknis.</p>
 
   <h2>Hak dan kendalimu</h2>
   <ul>
@@ -44,6 +45,6 @@
   </ul>
 
   <h2>Kontak</h2>
-  <p>Pertanyaan soal data atau permintaan bantuan{{if .SupportEmail}}: <a href="mailto:{{.SupportEmail}}">{{.SupportEmail}}</a>{{else}}, hubungi admin instalasi ini{{end}}.</p>
+  <p>Pertanyaan soal data atau permintaan bantuan{{if .SupportEmail}}: <a href="mailto:{{.SupportEmail}}">{{.SupportEmail}}</a>{{else}}, hubungi pengelola layanan{{end}}.</p>
 </div>
 {{end}}
