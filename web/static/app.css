@@ -1920,3 +1920,19 @@ body.bulk-on .fab { display: none; }
 body.fs-on { overflow: hidden; }
 body.fs-on .fab { display: none; }
 @media (min-width: 640px) { .fs { align-items: center; } .fs-panel { border-radius: 20px; } }
+
+/* ---- about footer (settings) ---- */
+.about { display: flex; flex-direction: column; align-items: center; gap: .5rem; margin: 2rem 0 1rem; text-align: center; color: var(--text-muted); font-size: .8125rem; }
+.about-icon { width: 56px; height: 56px; border-radius: 14px; }
+.about-meta { font-weight: 600; }
+.about-maker { display: inline-flex; align-items: center; gap: .375rem; }
+.about-logo { height: 14px; width: auto; display: block; }
+.about-logo-dark { display: none; }
+body.theme-dark .about-logo-light { display: none; }
+body.theme-dark .about-logo-dark { display: block; }
+@media (prefers-color-scheme: dark) {
+  body.theme-system .about-logo-light { display: none; }
+  body.theme-system .about-logo-dark { display: block; }
+}
+.about-links { display: flex; flex-wrap: wrap; justify-content: center; gap: .375rem .625rem; }
+.about-links a { color: var(--text-muted); text-decoration: underline; text-underline-offset: 2px; }

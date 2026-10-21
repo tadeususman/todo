@@ -8,6 +8,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"todo/internal/config"
 	authmw "todo/internal/middleware"
 	"todo/internal/prefs"
 	"todo/internal/project"
@@ -239,6 +240,9 @@ func (a *App) renderSettings(w http.ResponseWriter, r *http.Request, status int,
 		"Error":         errMsg,
 		"Info":          info,
 		"ArchivedCount": task.CountArchived(r.Context(), a.DB, uid),
+		"Version":       config.Version,
+		"Year":          time.Now().Year(),
+		"SupportEmail":  a.SupportEmail,
 	}
 	if me != nil {
 		data["Username"] = me.Username
