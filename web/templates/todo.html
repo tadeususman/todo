@@ -1,36 +1,71 @@
 {{define "content"}}
-<header class="hero">
-  <div>
-    <p class="eyebrow">Agenda</p>
+<div class="todo-top">
+  <header class="todo-bar">
     <h1>Todo</h1>
-  </div>
-  <div class="hero-side">
-    <span class="hero-count">{{.TotalOpen}} terbuka</span>
-    {{if .Sections}}<button type="button" class="select-toggle" id="select-toggle" aria-pressed="false">Pilih</button>{{end}}
-  </div>
-</header>
+    <div class="hero-side">
+      <span class="hero-count">{{.TotalOpen}} terbuka</span>
+      {{if .Sections}}<button type="button" class="select-toggle" id="select-toggle" aria-pressed="false">Pilih</button>{{end}}
+    </div>
+  </header>
 
-<form class="search-box" method="get" action="/todo" role="search">
-  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-  <input type="search" name="q" value="{{.Q}}" placeholder="Cari task" maxlength="100" autocomplete="off" aria-label="Cari task">
-  {{if .FilterID}}<input type="hidden" name="project" value="{{.FilterID}}">{{end}}
-  {{if .Priority}}<input type="hidden" name="priority" value="{{.Priority}}">{{end}}
-</form>
+  <div class="todo-tools">
+    <form class="search-box" method="get" action="/todo" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" name="q" value="{{.Q}}" placeholder="Cari task" maxlength="100" autocomplete="off" aria-label="Cari task">
+      {{if .FilterID}}<input type="hidden" name="project" value="{{.FilterID}}">{{end}}
+      {{if .Priority}}<input type="hidden" name="priority" value="{{.Priority}}">{{end}}
+    </form>
+    <button type="button" class="filter-btn {{if or .FilterID .Priority}}on{{end}}" id="filter-open" aria-haspopup="dialog" aria-label="Filter">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2" fill="var(--bg)"/><circle cx="15" cy="12" r="2" fill="var(--bg)"/><circle cx="8" cy="17" r="2" fill="var(--bg)"/></svg>
+    </button>
+  </div>
 
-<nav class="chip-row" aria-label="Filter project">
-  <a href="{{todourl 0 $.Priority $.Q}}" class="chip {{if eq .FilterID 0}}active{{end}}">{{.ProjectAll}}</a>
-  {{range .Projects}}
-  <a href="{{todourl .ID $.Priority $.Q}}" class="chip {{if eq .ID $.FilterID}}active{{end}}">
-    <span class="chip-dot" style="background:{{.Color}}"></span>{{.Name}}
-  </a>
+  {{if .Filtering}}
+  <div class="active-filters">
+    {{if .FilterID}}{{range .Projects}}{{if eq .ID $.FilterID}}
+    <a href="{{todourl 0 $.Priority $.Q}}" class="af" aria-label="Hapus filter project"><span class="chip-dot" style="background:{{.Color}}"></span>{{.Name}}<span class="af-x">&times;</span></a>
+    {{end}}{{end}}{{end}}
+    {{if .Priority}}{{range .Priorities}}{{if eq .Key $.Priority}}
+    <a href="{{todourl $.FilterID "" $.Q}}" class="af" aria-label="Hapus filter prioritas">{{.Label}}<span class="af-x">&times;</span></a>
+    {{end}}{{end}}{{end}}
+    {{if .Q}}<a href="{{todourl .FilterID .Priority ""}}" class="af" aria-label="Hapus pencarian">&ldquo;{{.Q}}&rdquo;<span class="af-x">&times;</span></a>{{end}}
+  </div>
   {{end}}
-</nav>
-<nav class="chip-row chip-row-tight" aria-label="Filter prioritas">
-  {{range .Priorities}}
-  <a href="{{if eq .Key $.Priority}}{{todourl $.FilterID "" $.Q}}{{else}}{{todourl $.FilterID .Key $.Q}}{{end}}" class="chip {{if eq .Key $.Priority}}active{{end}}">{{.Label}}</a>
-  {{end}}
-  {{if .Filtering}}<a href="{{todourl .FilterID "" ""}}" class="chip chip-clear">Hapus filter</a>{{end}}
-</nav>
+</div>
+
+<div class="sheet" id="filter-sheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-label="Filter">
+    <div class="sheet-grip"></div>
+    <p class="sheet-title">Project</p>
+    <nav class="sheet-chips" aria-label="Filter project">
+      <a href="{{todourl 0 $.Priority $.Q}}" class="chip {{if eq .FilterID 0}}active{{end}}">{{.ProjectAll}}</a>
+      {{range .Projects}}
+      <a href="{{todourl .ID $.Priority $.Q}}" class="chip {{if eq .ID $.FilterID}}active{{end}}"><span class="chip-dot" style="background:{{.Color}}"></span>{{.Name}}</a>
+      {{end}}
+    </nav>
+    <p class="sheet-title">Prioritas</p>
+    <nav class="sheet-chips" aria-label="Filter prioritas">
+      {{range .Priorities}}
+      <a href="{{if eq .Key $.Priority}}{{todourl $.FilterID "" $.Q}}{{else}}{{todourl $.FilterID .Key $.Q}}{{end}}" class="chip {{if eq .Key $.Priority}}active{{end}}">{{.Label}}</a>
+      {{end}}
+    </nav>
+    <div class="sheet-foot">
+      {{if .Filtering}}<a href="{{todourl 0 "" ""}}" class="sheet-clear">Hapus semua filter</a>{{end}}
+      <button type="button" class="sheet-close" data-close>Tutup</button>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var sheet = document.getElementById('filter-sheet'), open = document.getElementById('filter-open');
+  if (!sheet || !open) return;
+  function set(on) { sheet.hidden = !on; document.body.classList.toggle('sheet-on', on); }
+  open.addEventListener('click', function () { set(true); });
+  sheet.addEventListener('click', function (e) { if (e.target.closest('[data-close]')) set(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
+})();
+</script>
 
 {{if not .Sections}}
 <div class="empty">
