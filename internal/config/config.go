@@ -22,6 +22,7 @@ type Config struct {
 	AILogRetentionDays int    // ai_logs older than this are purged
 	TZ                 string
 	TrustedProxies     string // comma-separated CIDRs/IPs allowed to set X-Real-IP (empty = loopback+private)
+	RedirectHosts      string // comma-separated old hostnames redirected to PublicURL
 
 	AdminUsername string
 	AdminPassword string
@@ -49,6 +50,7 @@ func Load() Config {
 		AILogRetentionDays: getEnvInt("AI_LOG_RETENTION_DAYS", 30),
 		TZ:                 getEnv("TZ", "Asia/Jakarta"),
 		TrustedProxies:     os.Getenv("TRUSTED_PROXIES"),
+		RedirectHosts:      os.Getenv("REDIRECT_HOSTS"),
 
 		AdminUsername: mustEnv("ADMIN_USERNAME"),
 		AdminPassword: mustEnv("ADMIN_PASSWORD"),

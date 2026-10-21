@@ -90,6 +90,8 @@ type User struct {
 	Status    string
 	IsAdmin   bool
 	CreatedAt time.Time
+
+	ResetRequestedAt *time.Time // non-nil while a "lupa password" request waits for the admin
 }
 
 // uniqueErr maps a unique-violation to ErrUsernameTaken / ErrEmailTaken (nil if err isn't one).
@@ -237,7 +239,7 @@ func ResetPassword(ctx context.Context, db *sql.DB, id int64) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	res, err := db.ExecContext(ctx, `UPDATE users SET password_hash = $1 WHERE id = $2 AND is_admin = false`, string(h), id)
+	res, err := db.ExecContext(ctx, `UPDATE users SET password_hash = $1, reset_requested_at = NULL WHERE id = $2 AND is_admin = false`, string(h), id)
 	if err != nil {
 		return "", err
 	}
@@ -253,8 +255,8 @@ func ResetPassword(ctx context.Context, db *sql.DB, id int64) (string, error) {
 // List returns all users, pending first, then newest.
 func List(ctx context.Context, db *sql.DB) ([]User, error) {
 	rows, err := db.QueryContext(ctx, `
-		SELECT id, username, coalesce(email, ''), status, is_admin, created_at FROM users
-		ORDER BY (status = 'pending') DESC, created_at DESC`)
+		SELECT id, username, coalesce(email, ''), status, is_admin, created_at, reset_requested_at FROM users
+		ORDER BY (status = 'pending' OR reset_requested_at IS NOT NULL) DESC, created_at DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +264,7 @@ func List(ctx context.Context, db *sql.DB) ([]User, error) {
 	var out []User
 	for rows.Next() {
 		var u User
-		if err := rows.Scan(&u.ID, &u.Username, &u.Email, &u.Status, &u.IsAdmin, &u.CreatedAt); err != nil {
+		if err := rows.Scan(&u.ID, &u.Username, &u.Email, &u.Status, &u.IsAdmin, &u.CreatedAt, &u.ResetRequestedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, u)
@@ -270,10 +272,51 @@ func List(ctx context.Context, db *sql.DB) ([]User, error) {
 	return out, rows.Err()
 }
 
+// PendingCount is what waits for the admin: sign-ups to approve plus password-reset requests.
 func PendingCount(ctx context.Context, db *sql.DB) int {
 	var n int
-	_ = db.QueryRowContext(ctx, `SELECT count(*) FROM users WHERE status = 'pending'`).Scan(&n)
+	_ = db.QueryRowContext(ctx, `SELECT count(*) FROM users WHERE status = 'pending' OR reset_requested_at IS NOT NULL`).Scan(&n)
 	return n
+}
+
+// RequestReset flags the approved, non-admin account with this username or email as asking the admin
+// for a password reset. ok=false when there is no such account; callers must not reveal that.
+func RequestReset(ctx context.Context, db *sql.DB, login string) (username string, ok bool, err error) {
+	login = strings.ToLower(strings.TrimSpace(login))
+	if login == "" {
+		return "", false, nil
+	}
+	err = db.QueryRowContext(ctx, `
+		UPDATE users SET reset_requested_at = now()
+		WHERE (lower(username) = $1 OR lower(email) = $1) AND status = 'approved' AND is_admin = false
+		RETURNING username`, login).Scan(&username)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", false, nil
+	}
+	return username, err == nil, err
+}
+
+// DismissReset clears a pending reset request without changing the password.
+func DismissReset(ctx context.Context, db *sql.DB, id int64) error {
+	_, err := db.ExecContext(ctx, `UPDATE users SET reset_requested_at = NULL WHERE id = $1`, id)
+	return err
+}
+
+// AdminIDs returns the approved admins (to notify them).
+func AdminIDs(ctx context.Context, db *sql.DB) []int64 {
+	rows, err := db.QueryContext(ctx, `SELECT id FROM users WHERE is_admin AND status = 'approved'`)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+	var ids []int64
+	for rows.Next() {
+		var id int64
+		if rows.Scan(&id) == nil {
+			ids = append(ids, id)
+		}
+	}
+	return ids
 }
 
 // SetStatus approves or rejects a non-admin user. Rejecting also ends their sessions.

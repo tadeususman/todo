@@ -73,6 +73,21 @@ func (a *App) AdminDeleteUser(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/admin/users", http.StatusSeeOther)
 }
 
+// AdminDismissReset menolak permintaan reset tanpa mengubah password.
+func (a *App) AdminDismissReset(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	if err := user.DismissReset(r.Context(), a.DB, id); err != nil {
+		serverError(w, err)
+		return
+	}
+	a.audit(r, 0, "admin_dismiss_reset", strconv.FormatInt(id, 10))
+	http.Redirect(w, r, "/admin/users", http.StatusSeeOther)
+}
+
 // AdminResetPassword membuat password sementara untuk user dan menampilkannya sekali (tanpa redirect, tidak disimpan).
 func (a *App) AdminResetPassword(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)

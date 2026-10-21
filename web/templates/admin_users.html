@@ -22,6 +22,7 @@
     <div class="user-main">
       <span class="user-name">{{.Username}}</span>
       {{if .Email}}<span class="user-meta">{{.Email}}</span>{{end}}
+      {{if .ResetRequestedAt}}<span class="user-meta"><span class="user-status st-reset">minta reset password</span> · {{(wib .ResetRequestedAt).Format "02 Jan 2006, 15:04"}}</span>{{end}}
       {{if and $.ResetPW (eq $.ResetID .ID)}}<div class="reset-result">Password sementara: <code>{{$.ResetPW}}</code><br><small>Tampil sekali saja. Kirim ke user dan minta diganti di Setting.</small></div>{{end}}
       <span class="user-meta">
         <span class="user-status st-{{.Status}}">{{if .IsAdmin}}admin{{else if eq .Status "pending"}}menunggu{{else if eq .Status "approved"}}aktif{{else}}ditolak{{end}}</span>
@@ -31,7 +32,8 @@
     {{if not .IsAdmin}}
     <div class="user-actions">
       {{if eq .Status "approved"}}
-      <form method="post" action="/admin/users/{{.ID}}/reset-password" class="inline" data-confirm="Reset password user {{.Username}}? Password lama tidak berlaku dan sesi loginnya diputus." data-confirm-ok="Reset"><button type="submit" class="ghost">Reset password</button></form>
+      <form method="post" action="/admin/users/{{.ID}}/reset-password" class="inline" data-confirm="Reset password user {{.Username}}? Password lama tidak berlaku dan sesi loginnya diputus." data-confirm-ok="Reset"><button type="submit" class="{{if .ResetRequestedAt}}btn-primary{{else}}ghost{{end}}">Reset password</button></form>
+      {{if .ResetRequestedAt}}<form method="post" action="/admin/users/{{.ID}}/dismiss-reset" class="inline"><button type="submit" class="ghost">Abaikan</button></form>{{end}}
       {{end}}
       {{if ne .Status "approved"}}
       <form method="post" action="/admin/users/{{.ID}}/approve" class="inline"><button type="submit" class="btn-primary">Setujui</button></form>

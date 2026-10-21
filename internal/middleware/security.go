@@ -12,9 +12,9 @@ import (
 )
 
 // csp is as strict as the current templates allow: they still use inline <script>/<style> and style attributes,
-// and load htmx from unpkg and web fonts from Google. Tighten with nonces once the inline code is gone.
+// and load web fonts from Google. Tighten with nonces once the inline code is gone.
 const csp = "default-src 'self'; " +
-	"script-src 'self' 'unsafe-inline' https://unpkg.com; " +
+	"script-src 'self' 'unsafe-inline'; " +
 	"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
 	"font-src 'self' https://fonts.gstatic.com; " +
 	"img-src 'self' data:; " +
@@ -46,6 +46,38 @@ func MaxBody(n int64) func(http.Handler) http.Handler {
 				r.Body = http.MaxBytesReader(w, r.Body, n)
 			}
 			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// RedirectHosts permanently redirects requests for any of the comma-separated hosts (e.g. an old domain)
+// to target (scheme://host, no trailing slash), keeping path and query. Other hosts pass through,
+// so internal checks like http://127.0.0.1:8083/healthz keep working.
+func RedirectHosts(hosts, target string) func(http.Handler) http.Handler {
+	set := map[string]bool{}
+	for _, h := range strings.Split(hosts, ",") {
+		if h = strings.ToLower(strings.TrimSpace(h)); h != "" {
+			set[h] = true
+		}
+	}
+	return func(next http.Handler) http.Handler {
+		if len(set) == 0 || target == "" {
+			return next
+		}
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			host := strings.ToLower(r.Host)
+			if h, _, err := net.SplitHostPort(host); err == nil {
+				host = h
+			}
+			if !set[host] {
+				next.ServeHTTP(w, r)
+				return
+			}
+			code := http.StatusMovedPermanently
+			if r.Method != http.MethodGet && r.Method != http.MethodHead {
+				code = http.StatusPermanentRedirect // keep the method and body
+			}
+			http.Redirect(w, r, target+r.URL.RequestURI(), code)
 		})
 	}
 }

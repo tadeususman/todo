@@ -7,6 +7,32 @@ import (
 	"time"
 )
 
+func TestRedirectHosts(t *testing.T) {
+	h := RedirectHosts("todo.tade.my.id, Old.Example", "https://todo-app.biz.id")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTeapot)
+	}))
+	cases := []struct {
+		method, host, uri string
+		code              int
+		loc               string
+	}{
+		{"GET", "todo.tade.my.id", "/todo?q=a%20b", http.StatusMovedPermanently, "https://todo-app.biz.id/todo?q=a%20b"},
+		{"GET", "old.example:443", "/", http.StatusMovedPermanently, "https://todo-app.biz.id/"},
+		{"POST", "todo.tade.my.id", "/login", http.StatusPermanentRedirect, "https://todo-app.biz.id/login"},
+		{"GET", "todo-app.biz.id", "/home", http.StatusTeapot, ""},
+		{"GET", "127.0.0.1:8083", "/healthz", http.StatusTeapot, ""},
+	}
+	for _, c := range cases {
+		r := httptest.NewRequest(c.method, c.uri, nil)
+		r.Host = c.host
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		if w.Code != c.code || w.Header().Get("Location") != c.loc {
+			t.Errorf("%s %s%s: got %d %q, want %d %q", c.method, c.host, c.uri, w.Code, w.Header().Get("Location"), c.code, c.loc)
+		}
+	}
+}
+
 func TestClientIPTrustsHeaderOnlyFromProxy(t *testing.T) {
 	cases := []struct {
 		name, remote, xreal, want string

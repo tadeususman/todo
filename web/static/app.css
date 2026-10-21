@@ -49,11 +49,10 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 /* text size preference: everything is rem-based, so scaling the root scales the UI */
-html.size-small  { font-size: 14px; }
-html.size-medium { font-size: 16px; }
-html.size-large  { font-size: 18px; }
-/* on a desktop screen 18px reads oversized; keep Besar a notch above Normal there */
-@media (min-width: 900px) and (pointer: fine) { html.size-large { font-size: 17px; } }
+/* one step below the browser's 16px: the earlier 14/16/18 scale read oversized, especially with wide fonts like Jakarta */
+html.size-small  { font-size: 13px; }
+html.size-medium { font-size: 15px; }
+html.size-large  { font-size: 16px; }
 body {
   font-family: var(--font-ui);
   background: var(--bg);
@@ -1428,6 +1427,7 @@ body.theme-dark .msg-content code { background: rgba(255, 255, 255, 0.1); }
 .user-status.st-pending { color: var(--warn-text); }
 .user-status.st-approved { color: var(--accent-text); }
 .user-status.st-rejected { color: var(--danger-text); }
+.user-status.st-reset { color: var(--warn-text); font-weight: 600; }
 .reset-result { margin: .375rem 0; padding: .625rem .75rem; border-radius: .625rem; background: var(--accent-soft, #e8f0fe); color: inherit; font-size: .875rem; }
 .reset-result code { font-size: 1rem; font-weight: 600; user-select: all; letter-spacing: .03em; }
 .user-actions { display: flex; gap: .5rem; }

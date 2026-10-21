@@ -122,6 +122,7 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
+	r.Use(authmw.RedirectHosts(cfg.RedirectHosts, cfg.PublicURL))
 	r.Use(authmw.SecurityHeaders)
 	r.Use(authmw.MaxBody(1 << 20))
 	r.Use(authmw.SameOrigin)
@@ -214,6 +215,7 @@ func main() {
 			r.Post("/admin/users/{id}/reject", app.AdminReject())
 			r.Post("/admin/users/{id}/reset-password", app.AdminResetPassword)
 			r.Post("/admin/users/{id}/delete", app.AdminDeleteUser)
+			r.Post("/admin/users/{id}/dismiss-reset", app.AdminDismissReset)
 		})
 
 		r.Post("/prefs/theme", app.PrefsSetTheme)

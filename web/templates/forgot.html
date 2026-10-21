@@ -16,8 +16,15 @@
       <button type="submit">Kirim tautan reset</button>
     </form>
     {{end}}
-  {{else}}
-    <div class="info">Reset lewat email belum diaktifkan. Hubungi admin untuk meminta password sementara.</div>
+  {{else if not .Sent}}
+    <p class="auth-alt">Masukkan username atau email akunmu. Admin akan menerima permintaanmu dan memberimu password sementara.</p>
+    <form method="post" action="/forgot" class="stack" novalidate data-validate>
+      <label class="field">
+        <span>Username atau email</span>
+        <input type="text" name="login" autocomplete="username" required autofocus maxlength="254" autocapitalize="none" spellcheck="false">
+      </label>
+      <button type="submit">Minta reset ke admin</button>
+    </form>
   {{end}}
   <p class="auth-alt"><a href="/login">Kembali ke login</a></p>
 </div>

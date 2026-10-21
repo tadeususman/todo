@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="48x48" href="/static/icons/favicon-48.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="/static/app.css?v=82">
+  <link rel="stylesheet" href="/static/app.css?v=84">
   {{if ne .Font "system"}}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +21,6 @@
   {{if eq .Font "jakarta"}}<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">{{end}}
   {{if eq .Font "geist"}}<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">{{end}}
   {{end}}
-  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
 </head>
 <body class="theme-{{.Theme}} font-{{.Font}}">
   <div id="splash" class="splash" aria-hidden="true">
