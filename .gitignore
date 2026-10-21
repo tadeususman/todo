@@ -20,3 +20,9 @@ icon/
 
 # Play Store listing assets (uploaded to Play Console only)
 screenshot/
+
+# Android signing keys and build output (never commit)
+play-store/
+*.jks
+*.keystore
+signing-key-info.txt
