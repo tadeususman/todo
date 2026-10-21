@@ -121,8 +121,23 @@
         });
       }, true);
 
-      var busyMsgs = ['Membaca task kamu…', 'Menentukan prioritas & deadline…', 'Memilih project yang cocok…', 'Hampir selesai…'];
-      function showBusy() {
+      var busyDefault = ['Membaca task kamu…', 'Menentukan prioritas & deadline…', 'Memilih project yang cocok…', 'Hampir selesai…'];
+      // Pesan loading hanya menyebut yang memang dipilihkan sistem: field yang sudah diisi user tidak disebut
+      function busyPlan(form) {
+        var f = form && form.elements;
+        if (!f || !f.project_id || !f.priority || !f.deadline) return { msgs: busyDefault, saving: false };
+        var autoProject = !f.project_id.value, autoPrio = !f.priority.value, autoDl = !f.deadline.value;
+        if (!autoProject && !autoPrio && !autoDl) return { msgs: ['Menyimpan task kamu…', 'Hampir selesai…'], saving: true };
+        var m = ['Membaca task kamu…'];
+        if (autoPrio && autoDl) m.push('Menentukan prioritas & deadline…');
+        else if (autoPrio) m.push('Menentukan prioritas…');
+        else if (autoDl) m.push('Membaca deadline…');
+        if (autoProject) m.push('Memilih project yang cocok…');
+        m.push('Hampir selesai…');
+        return { msgs: m, saving: false };
+      }
+      function showBusy(form) {
+        var plan = busyPlan(form), busyMsgs = plan.msgs;
         var ov = document.getElementById('busy-overlay');
         var msg = document.getElementById('busy-msg');
         var sub = document.getElementById('busy-sub');
@@ -131,13 +146,16 @@
         var qd = document.getElementById('quick-dialog');
         if (qd && qd.open) qd.close();
         ov.hidden = false;
-        setInterval(function () {
+        function tick() {
           var sec = Math.round((Date.now() - t0) / 1000);
           i = Math.min(Math.floor(sec / 3), busyMsgs.length - 1);
           msg.textContent = busyMsgs[i];
           if (sec >= 15) sub.textContent = 'Masih diproses (' + sec + ' dtk)… mohon tunggu sebentar.';
+          else if (plan.saving) sub.textContent = 'Sedang menyimpan task. (' + sec + ' dtk)';
           else sub.textContent = 'Sedang merapikan task, biasanya 5–10 detik. (' + sec + ' dtk)';
-        }, 1000);
+        }
+        tick();
+        setInterval(tick, 1000);
       }
       // Balik dari bfcache: reset state
       window.addEventListener('pageshow', function (e) { if (e.persisted) location.reload(); });
@@ -233,7 +251,7 @@
         form.dataset.busy = 'yes';
         var btn = form.querySelector('button[type=submit]');
         if (btn) { btn.disabled = true; btn.textContent = 'Memproses…'; }
-        showBusy();
+        showBusy(form);
       });
     })();
 
