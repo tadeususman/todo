@@ -40,11 +40,11 @@
   <h2>Hak dan kendalimu</h2>
   <ul>
     <li><b>Unduh datamu</b> kapan saja dari Setting → Privasi &amp; data (format JSON).</li>
-    <li><b>Hapus akun</b> dari tempat yang sama. Semua task, project, dan chat dihapus permanen. Salinan di cadangan (backup) hilang sesuai masa simpan cadangan, paling lama 14 hari.</li>
+    <li><b>Hapus akun</b> dari tempat yang sama (panduan lengkap di <a href="/hapus-akun">halaman hapus akun</a>). Semua task, project, dan chat dihapus permanen. Salinan di cadangan (backup) hilang sesuai masa simpan cadangan, paling lama 14 hari.</li>
     <li>Ubah username, email, dan password di Setting → Akun.</li>
   </ul>
 
   <h2>Kontak</h2>
-  <p>Pertanyaan soal data atau permintaan bantuan, hubungi admin instalasi ini.</p>
+  <p>Pertanyaan soal data atau permintaan bantuan{{if .SupportEmail}}: <a href="mailto:{{.SupportEmail}}">{{.SupportEmail}}</a>{{else}}, hubungi admin instalasi ini{{end}}.</p>
 </div>
 {{end}}

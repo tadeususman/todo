@@ -1,0 +1,38 @@
+{{define "content"}}
+<header class="detail-top">
+  <a href="javascript:history.back()" class="back-link" aria-label="Kembali">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+    Kembali
+  </a>
+</header>
+<header class="hero">
+  <div>
+    <p class="eyebrow">Informasi</p>
+    <h1>Hapus akun</h1>
+  </div>
+</header>
+
+<div class="prose">
+  <p>Kamu bisa menghapus akun todo dan seluruh datanya kapan saja.</p>
+
+  <h2>Dari dalam aplikasi</h2>
+  <ol>
+    <li>Masuk ke akunmu.</li>
+    <li>Buka tab <b>Setting</b>, lalu <b>Privasi &amp; data</b>.</li>
+    <li>Pilih <b>Hapus akun</b>, masukkan passwordmu untuk konfirmasi.</li>
+  </ol>
+  <p>Sebelum menghapus, kamu bisa mengunduh datamu (format JSON) dari tempat yang sama.</p>
+
+  <h2>Yang dihapus</h2>
+  <ul>
+    <li>Akun (username, email, password), seluruh task, subtask, project, arsip, dan riwayat chat dihapus permanen saat itu juga.</li>
+    <li>Salinan di cadangan (backup) hilang sesuai masa simpan cadangan, paling lama 14 hari.</li>
+    <li>Catatan keamanan (log login dan tindakan admin) dapat tersimpan hingga 365 hari, tanpa isi task atau chat.</li>
+  </ul>
+
+  <h2>Tidak bisa masuk?</h2>
+  <p>Jika kamu lupa password atau tidak bisa mengakses akun,{{if .SupportEmail}} kirim permintaan penghapusan dari email yang terdaftar ke <a href="mailto:{{.SupportEmail}}">{{.SupportEmail}}</a>. Sebutkan username akunmu. Permintaan diproses dalam beberapa hari kerja.{{else}} hubungi admin instalasi ini dan sebutkan username serta email akunmu.{{end}}</p>
+
+  <p>Lihat juga <a href="/privasi">kebijakan privasi</a>.</p>
+</div>
+{{end}}

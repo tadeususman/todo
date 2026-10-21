@@ -11,7 +11,7 @@ import (
 )
 
 func (a *App) PrivacyPage(w http.ResponseWriter, r *http.Request) {
-	a.render(w, r, "privacy.html", map[string]any{"Nav": "settings"})
+	a.render(w, r, "privacy.html", map[string]any{"Nav": "settings", "SupportEmail": a.SupportEmail})
 }
 
 // jsonRows runs a query that selects one json array column and returns it raw.

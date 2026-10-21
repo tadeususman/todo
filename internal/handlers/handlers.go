@@ -123,6 +123,9 @@ type App struct {
 	ResetLimiter    *authmw.LoginLimiter
 	Mail            mail.Config
 	PublicURL       string
+	SupportEmail    string
+	AndroidPackage  string
+	AndroidSHA256   string // comma-separated
 	RegLimiter      *authmw.LoginLimiter
 	Pages           map[string]*template.Template // one fully-parsed set per page, built at startup
 }

@@ -112,6 +112,9 @@ func main() {
 		ResetLimiter:    authmw.NewLoginLimiter(3, time.Hour),
 		Mail:            mail.Config{Host: cfg.SMTPHost, Port: cfg.SMTPPort, User: cfg.SMTPUser, Pass: cfg.SMTPPass, From: cfg.SMTPFrom},
 		PublicURL:       cfg.PublicURL,
+		SupportEmail:    cfg.SupportEmail,
+		AndroidPackage:  cfg.AndroidPackage,
+		AndroidSHA256:   cfg.AndroidSHA256,
 		RegLimiter:      authmw.NewLoginLimiter(5, time.Hour),
 		Pages:           tmpl,
 	}
@@ -160,6 +163,8 @@ func main() {
 	r.Get("/register", app.RegisterPage)
 	r.Post("/register", app.RegisterSubmit)
 	r.Get("/privasi", app.PrivacyPage)
+	r.Get("/hapus-akun", app.DeleteAccountInfoPage)
+	r.Get("/.well-known/assetlinks.json", app.AssetLinks)
 	r.Get("/forgot", app.ForgotPage)
 	r.Post("/forgot", app.ForgotSubmit)
 	r.Get("/reset/{token}", app.ResetPage)

@@ -1823,6 +1823,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, .task:focus-within
 /* splash: animated logo, shown once per browser session */
 .splash { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; background: var(--bg); transition: opacity .4s ease; }
 .splash .brand-mark { margin: 0; }
+.splash .brand-mark img { width: 140px; max-width: 60vw; height: auto; }
 .splash.splash-out { opacity: 0; pointer-events: none; }
 body.splash-on { overflow: hidden; }
 

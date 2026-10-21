@@ -16,7 +16,10 @@ type Config struct {
 	SMTPHost, SMTPPort string
 	SMTPUser, SMTPPass string
 	SMTPFrom           string
-	AILogRetentionDays int // ai_logs older than this are purged
+	SupportEmail       string // contact shown on the public privacy / delete-account pages
+	AndroidPackage     string // Play Store package name for /.well-known/assetlinks.json
+	AndroidSHA256      string // comma-separated SHA-256 signing-cert fingerprints
+	AILogRetentionDays int    // ai_logs older than this are purged
 	TZ                 string
 	TrustedProxies     string // comma-separated CIDRs/IPs allowed to set X-Real-IP (empty = loopback+private)
 
@@ -40,6 +43,9 @@ func Load() Config {
 		SMTPUser:           os.Getenv("SMTP_USER"),
 		SMTPPass:           os.Getenv("SMTP_PASS"),
 		SMTPFrom:           os.Getenv("SMTP_FROM"),
+		SupportEmail:       os.Getenv("SUPPORT_EMAIL"),
+		AndroidPackage:     os.Getenv("ANDROID_PACKAGE"),
+		AndroidSHA256:      os.Getenv("ANDROID_SHA256"),
 		AILogRetentionDays: getEnvInt("AI_LOG_RETENTION_DAYS", 30),
 		TZ:                 getEnv("TZ", "Asia/Jakarta"),
 		TrustedProxies:     os.Getenv("TRUSTED_PROXIES"),
