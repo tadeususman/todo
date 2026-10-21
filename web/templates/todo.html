@@ -33,26 +33,26 @@
   {{end}}
 </div>
 
-<div class="sheet" id="filter-sheet" hidden>
-  <div class="sheet-backdrop" data-close></div>
-  <div class="sheet-panel" role="dialog" aria-modal="true" aria-label="Filter">
-    <div class="sheet-grip"></div>
-    <p class="sheet-title">Project</p>
-    <nav class="sheet-chips" aria-label="Filter project">
+<div class="fs" id="filter-sheet" hidden>
+  <div class="fs-backdrop" data-close></div>
+  <div class="fs-panel" role="dialog" aria-modal="true" aria-label="Filter">
+    <div class="fs-grip"></div>
+    <p class="fs-title">Project</p>
+    <nav class="fs-chips" aria-label="Filter project">
       <a href="{{todourl 0 $.Priority $.Q}}" class="chip {{if eq .FilterID 0}}active{{end}}">{{.ProjectAll}}</a>
       {{range .Projects}}
       <a href="{{todourl .ID $.Priority $.Q}}" class="chip {{if eq .ID $.FilterID}}active{{end}}"><span class="chip-dot" style="background:{{.Color}}"></span>{{.Name}}</a>
       {{end}}
     </nav>
-    <p class="sheet-title">Prioritas</p>
-    <nav class="sheet-chips" aria-label="Filter prioritas">
+    <p class="fs-title">Prioritas</p>
+    <nav class="fs-chips" aria-label="Filter prioritas">
       {{range .Priorities}}
       <a href="{{if eq .Key $.Priority}}{{todourl $.FilterID "" $.Q}}{{else}}{{todourl $.FilterID .Key $.Q}}{{end}}" class="chip {{if eq .Key $.Priority}}active{{end}}">{{.Label}}</a>
       {{end}}
     </nav>
-    <div class="sheet-foot">
-      {{if .Filtering}}<a href="{{todourl 0 "" ""}}" class="sheet-clear">Hapus semua filter</a>{{end}}
-      <button type="button" class="sheet-close" data-close>Tutup</button>
+    <div class="fs-foot">
+      {{if .Filtering}}<a href="{{todourl 0 "" ""}}" class="fs-clear">Hapus semua filter</a>{{end}}
+      <button type="button" class="fs-close" data-close>Tutup</button>
     </div>
   </div>
 </div>
@@ -60,7 +60,7 @@
 (function () {
   var sheet = document.getElementById('filter-sheet'), open = document.getElementById('filter-open');
   if (!sheet || !open) return;
-  function set(on) { sheet.hidden = !on; document.body.classList.toggle('sheet-on', on); }
+  function set(on) { sheet.hidden = !on; document.body.classList.toggle('fs-on', on); }
   open.addEventListener('click', function () { set(true); });
   sheet.addEventListener('click', function (e) { if (e.target.closest('[data-close]')) set(false); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
