@@ -20,6 +20,7 @@
   --danger-hover: #fca5a5;   /* red 300 */
   --danger-soft: #fee2e2;
   --danger-text: #991b1b;    /* red 800 */
+  --late: #b91c1c;           /* red 700: overdue labels */
 
   --warn: #fde68a;           /* amber 200 pastel */
   --warn-soft: #fef3c7;
@@ -94,6 +95,7 @@ body.theme-dark {
   --danger-hover: #991b1b;   /* red 800 */
   --danger-soft: rgba(239, 68, 68, 0.15);
   --danger-text: #fecaca;    /* red 200 */
+  --late: #f87171;           /* red 400: overdue labels read red, not pink, on the dark ground */
 
   --warn: #78350f;
   --warn-soft: rgba(245, 158, 11, 0.15);
@@ -121,6 +123,7 @@ body.theme-dark {
     --danger-hover: #991b1b;
     --danger-soft: rgba(239, 68, 68, 0.15);
     --danger-text: #fecaca;
+    --late: #f87171;
 
     --warn: #78350f;
     --warn-soft: rgba(245, 158, 11, 0.15);
@@ -459,7 +462,7 @@ body.auth {
 .task-meta .dot.p-urgent { background: var(--p-urgent); }
 
 .task-meta .deadline { display: inline-flex; align-items: center; gap: .25rem; }
-.task-meta .deadline.overdue { color: var(--danger-text); }
+.task-meta .deadline.overdue { color: var(--late); }
 .task-meta svg { width: 12px; height: 12px; stroke-width: 2; }
 
 .task-action-del {
@@ -804,7 +807,7 @@ button.link-danger:hover { background: var(--danger-soft); }
   color: var(--text-muted);
   flex: 1;
 }
-.section-label-overdue { color: var(--danger-text); }
+.section-label-overdue { color: var(--late); }
 .section-label-today { color: var(--accent-text); }
 
 .section-count {
@@ -1497,7 +1500,7 @@ input.invalid, textarea.invalid, select.invalid { border-color: var(--danger-tex
 /* blocks */
 .block { margin-bottom: 1.5rem; }
 .block-title { display: flex; align-items: center; gap: .5rem; margin: 0 0 .25rem; font-size: .75rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); }
-.block-late { color: var(--danger-text); }
+.block-late { color: var(--late); }
 .pill-count { padding: .125rem .5rem; border-radius: var(--radius-full); background: var(--surface-alt); color: var(--text-muted); font-size: .6875rem; font-weight: 600; letter-spacing: 0; }
 
 /* task rows: flat, no cards */
@@ -1564,7 +1567,7 @@ input.invalid, textarea.invalid, select.invalid { border-color: var(--danger-tex
 .todo-section > summary { padding: .75rem 0 .25rem; }
 .section-label { font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.01em; text-transform: none; color: var(--text); }
 .section-label-today { color: var(--text); }
-.section-label-overdue { color: var(--danger-text); }
+.section-label-overdue { color: var(--late); }
 
 /* bottom nav + FAB */
 .bottom-nav { border-top-color: var(--border-soft); }
