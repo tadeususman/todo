@@ -17,3 +17,6 @@ Thumbs.db
 # app icons are needed at runtime (PWA manifest, favicon, login wordmark)
 !web/static/icons/*.png
 icon/
+
+# Play Store listing assets (uploaded to Play Console only)
+screenshot/
