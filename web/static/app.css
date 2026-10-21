@@ -881,7 +881,7 @@ body.theme-dark .fab { box-shadow: 0 6px 20px rgba(52, 211, 153, 0.25); }
   border: none;
   border-radius: 12px;
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-text);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
