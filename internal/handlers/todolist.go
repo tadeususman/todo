@@ -47,7 +47,6 @@ var sizeChoices = []prefChoice{
 	{"small", "Kecil"},
 	{"medium", "Normal"},
 	{"large", "Besar"},
-	{"xlarge", "Ekstra"},
 }
 
 type remindChoice struct {

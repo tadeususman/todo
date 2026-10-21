@@ -8,13 +8,13 @@ import (
 type Prefs struct {
 	Theme string // system | light | dark
 	Font  string // system | inter | jakarta | geist
-	Size  string // small | medium | large | xlarge
+	Size  string // small | medium | large
 }
 
 var validThemes = map[string]bool{"system": true, "light": true, "dark": true}
 var validFonts = map[string]bool{"system": true, "inter": true, "jakarta": true, "geist": true}
 
-var validSizes = map[string]bool{"small": true, "medium": true, "large": true, "xlarge": true}
+var validSizes = map[string]bool{"small": true, "medium": true, "large": true}
 
 func Default() Prefs { return Prefs{Theme: "system", Font: "system", Size: "medium"} }
 

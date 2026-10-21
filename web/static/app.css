@@ -1,13 +1,14 @@
 :root {
-  /* Light theme — Any.do inspired, with mint-green accent */
-  --bg: #f8fafc;
+  /* Light theme — warm and low-glare (same approach as Selah): cream ground, white cards,
+     beige borders and navy text instead of cold blue-white + near-black, with the pastel mint accent */
+  --bg: #fbf9f5;
   --surface: #ffffff;
-  --surface-alt: #f1f5f9;
-  --text: #0f172a;
-  --text-muted: #64748b;
-  --text-subtle: #94a3b8;
-  --border: #e2e8f0;
-  --border-soft: #f1f5f9;
+  --surface-alt: #f3f0ea;
+  --text: #26313f;
+  --text-muted: #6f7988;
+  --text-subtle: #9aa1ab;
+  --border: #e7e1d6;
+  --border-soft: #f3f0ea;
 
   --accent: #a7f3d0;        /* emerald 200 — pastel mint button bg */
   --accent-hover: #6ee7b7;  /* emerald 300 */
@@ -51,7 +52,8 @@ html, body { margin: 0; padding: 0; }
 html.size-small  { font-size: 14px; }
 html.size-medium { font-size: 16px; }
 html.size-large  { font-size: 18px; }
-html.size-xlarge { font-size: 20px; }
+/* on a desktop screen 18px reads oversized; keep Besar a notch above Normal there */
+@media (min-width: 900px) and (pointer: fine) { html.size-large { font-size: 17px; } }
 body {
   font-family: var(--font-ui);
   background: var(--bg);
@@ -1195,10 +1197,6 @@ button.sub-check:hover { border-color: var(--accent-strong); }
   gap: 1rem;
 }
 
-/* make room above the sticky input */
-body:has(.chat-input) {
-  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 72px);
-}
 
 .chat-thread {
   display: flex;
@@ -1254,9 +1252,12 @@ body.theme-dark .msg-content code { background: rgba(255, 255, 255, 0.1); }
   transition: opacity 120ms;
 }
 .msg-del button {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-full);
   background: var(--surface);
   color: var(--text-subtle);
@@ -1265,7 +1266,9 @@ body.theme-dark .msg-content code { background: rgba(255, 255, 255, 0.1); }
 }
 .msg-del button:hover { color: var(--danger-text); background: var(--danger-soft); }
 .msg-bubble:hover .msg-del { opacity: 1; }
-.msg-del button svg { width: 12px; height: 12px; }
+/* touch screens have no hover: keep the button visible (softly) so it can be tapped */
+@media (hover: none) { .msg-del { opacity: .7; } }
+.msg-del button svg { width: 13px; height: 13px; display: block; }
 
 .msg-time {
   font-size: .6875rem;
@@ -1319,12 +1322,15 @@ body.theme-dark .msg-content code { background: rgba(255, 255, 255, 0.1); }
 }
 .chat-input textarea {
   flex: 1;
-  min-height: 40px;
-  max-height: 140px;
+  /* 3 lines by default (rows=3), grows with the text up to ~6 lines, then scrolls */
+  min-height: calc(3 * 1.4em + 1.25rem + 2px);
+  max-height: calc(6 * 1.4em + 1.25rem + 2px);
+  overflow-y: auto;
   resize: none;
-  padding: .5rem .75rem;
+  padding: .625rem .875rem;
   font-size: .9375rem;
-  border-radius: var(--radius-full);
+  line-height: 1.4;
+  border-radius: var(--radius-lg);
   background: var(--surface-alt);
   border: 1px solid var(--border);
 }
@@ -1473,6 +1479,7 @@ input.invalid, textarea.invalid, select.invalid { border-color: var(--danger-tex
 .hero { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem 0 1.5rem; }
 .eyebrow { margin: 0 0 .375rem; font-size: .75rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); }
 .hero h1 { margin: 0; font-size: 2.25rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; color: var(--text); }
+.hero h1.hero-date { font-size: 1.875rem; }
 .hero-count { flex-shrink: 0; padding: .25rem .75rem; border-radius: var(--radius-full); background: var(--surface-alt); color: var(--text-muted); font-size: .8125rem; font-weight: 600; }
 .ring {
   position: relative;
@@ -1893,8 +1900,7 @@ body.bulk-on .fab { display: none; }
 .bulk-done { background: var(--accent-strong); color: #04281c; border-color: transparent; }
 
 /* ---- todo page: sticky header + filter sheet ---- */
-.todo-top { position: sticky; top: 0; z-index: 40; margin: 0 -1.5rem .5rem; padding: .75rem 1.5rem .5rem; background: var(--bg); }
-.todo-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .625rem; }
+.todo-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 40px; margin-bottom: .625rem; } /* same height on Todo and Chat so the titles line up */
 .todo-bar h1 { margin: 0; font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; color: var(--text); }
 .todo-tools { display: flex; gap: .5rem; align-items: center; }
 .todo-tools .search-box { flex: 1; margin: 0; }
@@ -1936,3 +1942,29 @@ body.theme-dark .about-logo-dark { display: block; }
 }
 .about-links { display: flex; flex-wrap: wrap; justify-content: center; gap: .375rem .625rem; }
 .about-links a { color: var(--text-muted); text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---- app-style layout (Todo, Chat, Setting): the page itself never scrolls (no bounce, no header drift).
+   .page-top (header) and the chat input sit in a column above the bottom nav; only .page-scroll moves. ---- */
+html:has(.page-top), body:has(.page-top) { height: 100%; overflow: hidden; overscroll-behavior: none; }
+body:has(.page-top) { padding-bottom: 0; }
+body:has(.page-top) main.container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - var(--nav-height)); /* the nav is border-box: its height already holds the safe-area padding */
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.page-top { flex-shrink: 0; margin: 0 -1.5rem; padding: .75rem 1.5rem .5rem; background: var(--bg); }
+.page-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -1.5rem; padding: .5rem 1.5rem 1.5rem; }
+/* bottom padding keeps the last task clear of the floating + button */
+.todo-scroll { padding-bottom: 6rem; }
+.chat-thread.page-scroll { padding: .75rem 1.5rem 1rem; margin-bottom: 0; }
+body:has(.page-top) .chat-input { position: static; flex-shrink: 0; margin: 0 -1.5rem; max-width: none; }
+.chat-top .search-box { margin: 0; }
+.msg-content mark { padding: 0 .125rem; border-radius: 4px; background: var(--warn); color: var(--warn-text); }
+.chat-hint { align-self: center; flex-shrink: 0; color: var(--text-muted); font-size: .75rem; }
+.chat-results .msg-bubble { cursor: pointer; }
+.chat-results .msg-bubble:hover { box-shadow: 0 0 0 2px var(--accent); }
+/* message opened from a search result */
+.msg-found .msg-bubble { animation: msg-found 2.4s ease; }
+@keyframes msg-found { 0%, 60% { box-shadow: 0 0 0 3px var(--warn); } 100% { box-shadow: 0 0 0 3px transparent; } }

@@ -45,12 +45,30 @@ func (a *App) ChatPage(w http.ResponseWriter, r *http.Request) {
 	uid := authmw.UserID(r)
 	var username string
 	_ = a.DB.QueryRowContext(r.Context(), `SELECT username FROM users WHERE id = $1`, uid).Scan(&username)
-	msgs, _ := chat.List(r.Context(), a.DB, uid, 200)
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	if rs := []rune(q); len(rs) > 100 {
+		q = string(rs[:100])
+	}
+	var msgs []chat.Message
+	if q != "" {
+		msgs, _ = chat.Search(r.Context(), a.DB, uid, q, 100)
+	} else {
+		limit := 200
+		// ?at=<id> (from a search result): load far enough back that the message is in the thread,
+		// with some context above it; the page then scrolls to it.
+		if at, err := strconv.ParseInt(r.URL.Query().Get("at"), 10, 64); err == nil {
+			if newer, ok := chat.NewerCount(r.Context(), a.DB, uid, at); ok && newer+20 > limit {
+				limit = min(newer+20, 2000)
+			}
+		}
+		msgs, _ = chat.List(r.Context(), a.DB, uid, limit)
+	}
 	a.render(w, r, "chat.html", map[string]any{
 		"Nav":      "chat",
 		"Username": username,
 		"Messages": msgs,
 		"Items":    chatItems(msgs, time.Now()),
+		"Q":        q,
 	})
 }
 

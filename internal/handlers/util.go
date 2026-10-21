@@ -79,6 +79,11 @@ func setFlash(w http.ResponseWriter, msg string) {
 
 // popFlash reads and clears the flash message.
 func popFlash(w http.ResponseWriter, r *http.Request) string {
+	// A speculative load (prefetch/prerender, see speculationrules in layout) may never be shown,
+	// so it must not use up the one-time message.
+	if strings.Contains(r.Header.Get("Sec-Purpose"), "prefetch") {
+		return ""
+	}
 	c, err := r.Cookie(flashCookie)
 	if err != nil {
 		return ""

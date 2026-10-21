@@ -1,10 +1,9 @@
 {{define "content"}}
-<header class="hero">
-  <div>
-    <p class="eyebrow">Pengaturan</p>
-    <h1>Setting</h1>
-  </div>
-</header>
+<div class="page-top">
+  <header class="todo-bar"><h1>Setting</h1></header>
+</div>
+
+<div class="page-scroll">
 
 {{if .Error}}<div class="error">{{.Error}}</div>{{end}}
 {{if .Info}}<div class="info">{{.Info}}</div>{{end}}
@@ -257,6 +256,7 @@
     <a href="/privasi">Kebijakan Privasi</a>
   </div>
 </section>
+</div>
 
 <script>
 (function () {

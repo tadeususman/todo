@@ -40,15 +40,43 @@ func List(ctx context.Context, db *sql.DB, userID int64, limit int) ([]Message, 
 	if limit <= 0 {
 		limit = 100
 	}
+	return latest(ctx, db, `user_id = $1`, limit, userID)
+}
+
+// Search returns the most recent limit messages containing q (case-insensitive), oldest first.
+func Search(ctx context.Context, db *sql.DB, userID int64, q string, limit int) ([]Message, error) {
+	// strpos, not ILIKE: the user's text is matched literally, so % and _ need no escaping.
+	return latest(ctx, db, `user_id = $1 AND strpos(lower(content), lower($3)) > 0`, limit, userID, q)
+}
+
+// NewerCount returns how many of the user's messages come after message id (0 if it isn't theirs).
+func NewerCount(ctx context.Context, db *sql.DB, userID, id int64) (int, bool) {
+	var n int
+	var found bool
+	err := db.QueryRowContext(ctx, `
+		SELECT count(m.id), bool_or(true)
+		FROM chat_messages t
+		LEFT JOIN chat_messages m ON m.user_id = t.user_id AND (m.created_at, m.id) > (t.created_at, t.id)
+		WHERE t.id = $1 AND t.user_id = $2`,
+		id, userID).Scan(&n, &found)
+	if err != nil {
+		return 0, false
+	}
+	return n, found
+}
+
+// latest runs the newest-limit query for the given filter ($2 is the limit) and returns the rows oldest first.
+func latest(ctx context.Context, db *sql.DB, where string, limit int, userID int64, extra ...any) ([]Message, error) {
+	args := append([]any{userID, limit}, extra...)
 	rows, err := db.QueryContext(ctx, `
 		SELECT * FROM (
 			SELECT `+msgCols+`
 			FROM chat_messages
-			WHERE user_id = $1
+			WHERE `+where+`
 			ORDER BY created_at DESC, id DESC
 			LIMIT $2
 		) latest ORDER BY created_at ASC, id ASC`,
-		userID, limit)
+		args...)
 	if err != nil {
 		return nil, err
 	}

@@ -1,50 +1,113 @@
 {{define "content"}}
-<header class="hero">
-  <div>
-    <p class="eyebrow">Asisten</p>
+<div class="chat-top page-top">
+  <header class="todo-bar">
     <h1>Chat</h1>
-  </div>
-  {{if .Messages}}
-  <form method="post" action="/chat/clear" class="inline" data-confirm="Hapus semua chat?" data-confirm-ok="Bersihkan">
-    <button type="submit" class="icon-btn" aria-label="Bersihkan chat" title="Bersihkan chat">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 22-1-4"/><path d="M19 13.99a1 1 0 0 0 1-1V12a2 2 0 0 0-2-2h-3a1 1 0 0 1-1-1V4a2 2 0 0 0-4 0v5a1 1 0 0 1-1 1H6a2 2 0 0 0-2 2v.99a1 1 0 0 0 1 1"/><path d="M5 14h14l1.973 6.767A1 1 0 0 1 20 22H4a1 1 0 0 1-.973-1.233z"/><path d="m8 22 1-4"/></svg>
-    </button>
+    {{if and .Messages (not .Q)}}
+    <form method="post" action="/chat/clear" class="inline" data-confirm="Hapus semua chat?" data-confirm-ok="Bersihkan">
+      <button type="submit" class="icon-btn" aria-label="Bersihkan chat" title="Bersihkan chat">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 22-1-4"/><path d="M19 13.99a1 1 0 0 0 1-1V12a2 2 0 0 0-2-2h-3a1 1 0 0 1-1-1V4a2 2 0 0 0-4 0v5a1 1 0 0 1-1 1H6a2 2 0 0 0-2 2v.99a1 1 0 0 0 1 1"/><path d="M5 14h14l1.973 6.767A1 1 0 0 1 20 22H4a1 1 0 0 1-.973-1.233z"/><path d="m8 22 1-4"/></svg>
+      </button>
+    </form>
+    {{end}}
+  </header>
+  <form class="search-box" method="get" action="/chat" role="search">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="search" name="q" value="{{.Q}}" placeholder="Cari chat" maxlength="100" autocomplete="off" aria-label="Cari chat">
   </form>
+  {{if .Q}}
+  <div class="active-filters">
+    <a href="/chat" class="af" aria-label="Hapus pencarian">{{len .Messages}}{{if ge (len .Messages) 100}}+{{end}} pesan cocok<span class="af-x">&times;</span></a>
+    {{if .Messages}}<span class="chat-hint">Ketuk pesan untuk membukanya di chat</span>{{end}}
+  </div>
   {{end}}
-</header>
+</div>
 
-<div class="chat-thread" id="chat-thread">
+<div class="chat-thread page-scroll{{if .Q}} chat-results{{end}}" id="chat-thread">
   {{if not .Messages}}
   <div class="empty">
     {{template "icon-chat" .}}
-    <p>Belum ada chat. Coba tanya: "task urgent minggu ini apa aja?"</p>
+    {{if .Q}}<p>Tidak ada chat yang cocok dengan "{{.Q}}".</p>
+    {{else}}<p>Belum ada chat. Coba tanya: "task urgent minggu ini apa aja?"</p>{{end}}
   </div>
   {{end}}
 
   {{range .Items}}{{if .Day}}{{template "chat-day" .Day}}{{end}}{{template "chat-msg" .Msg}}{{end}}
 </div>
 
+{{if not .Q}}
 <form method="post" action="/chat" class="chat-input">
-  <textarea name="input" rows="1" placeholder="Ketik pertanyaan..." required onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();this.form.requestSubmit();}"></textarea>
+  <textarea name="input" rows="3" placeholder="Ketik pertanyaan..." required onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();this.form.requestSubmit();}"></textarea>
   <button type="submit" aria-label="Kirim">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
   </button>
 </form>
+{{end}}
 
 <script>
   (function () {
     var thread = document.getElementById('chat-thread');
-    // The page (not .chat-thread) is what scrolls, so jump the window to the newest message.
+    // Only .chat-thread scrolls (the page is fixed), so jump it to the newest message.
     function scrollBottom(smooth) {
-      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+      thread.scrollTo({ top: thread.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
     }
-    scrollBottom(false);
-    window.addEventListener('load', function () { scrollBottom(false); });
+    // Opened from a search result (/chat?at=ID#msg-ID): centre that message and flash it; otherwise start at the newest.
+    var target = !{{.Q}} && location.hash.indexOf('#msg-') === 0 ? document.getElementById(location.hash.slice(1)) : null;
+    function initialScroll() {
+      if (target) target.scrollIntoView({ block: 'center' });
+      else scrollBottom(false);
+    }
+    initialScroll();
+    window.addEventListener('load', initialScroll);
+    if (target) target.classList.add('msg-found');
+
+    // Search results: mark the matched text inside each message.
+    var q = {{.Q}};
+    if (q) {
+      var needle = q.toLowerCase();
+      thread.querySelectorAll('.msg-content').forEach(function (box) {
+        var walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
+        var nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        nodes.forEach(function (node) {
+          var text = node.nodeValue, lower = text.toLowerCase(), at = lower.indexOf(needle);
+          if (at < 0) return;
+          var frag = document.createDocumentFragment(), from = 0;
+          while (at >= 0) {
+            frag.appendChild(document.createTextNode(text.slice(from, at)));
+            var mark = document.createElement('mark');
+            mark.textContent = text.slice(at, at + needle.length);
+            frag.appendChild(mark);
+            from = at + needle.length;
+            at = lower.indexOf(needle, from);
+          }
+          frag.appendChild(document.createTextNode(text.slice(from)));
+          node.parentNode.replaceChild(frag, node);
+        });
+      });
+    }
+
+    // Search results: tap a message to open it in the full chat.
+    if (q) {
+      thread.addEventListener('click', function (e) {
+        if (e.target.closest('a, button, form')) return;
+        var msg = e.target.closest('.msg[id^="msg-"]');
+        if (!msg) return;
+        var id = msg.id.slice(4);
+        location.href = '/chat?at=' + encodeURIComponent(id) + '#msg-' + id;
+      });
+    }
 
     var form = document.querySelector('.chat-input');
     if (!form) return;
     var textarea = form.querySelector('textarea');
     var sendBtn = form.querySelector('button[type="submit"]');
+
+    // Grow with the text; CSS min/max-height keep it between 3 and ~6 lines.
+    function autosize() {
+      textarea.style.height = 'auto';
+      textarea.style.height = (textarea.scrollHeight + textarea.offsetHeight - textarea.clientHeight) + 'px';
+    }
+    textarea.addEventListener('input', autosize);
 
     function escapeHtml(s) {
       return s.replace(/[&<>"']/g, function (c) {

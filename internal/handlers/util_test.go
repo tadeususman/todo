@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"strings"
 	"testing"
@@ -150,5 +152,26 @@ func TestTodoURL(t *testing.T) {
 		if got := todoURL(c.project, c.prio, c.q); got != c.want {
 			t.Errorf("todoURL(%d,%q,%q) = %q, want %q", c.project, c.prio, c.q, got, c.want)
 		}
+	}
+}
+
+func TestPopFlashSkipsSpeculativeLoads(t *testing.T) {
+	cookie := &http.Cookie{Name: flashCookie, Value: "Tersimpan"}
+
+	r := httptest.NewRequest("GET", "/todo", nil)
+	r.AddCookie(cookie)
+	r.Header.Set("Sec-Purpose", "prefetch;prerender")
+	w := httptest.NewRecorder()
+	if msg := popFlash(w, r); msg != "" {
+		t.Fatalf("prerender got flash %q, want none", msg)
+	}
+	if len(w.Result().Cookies()) != 0 {
+		t.Fatal("prerender cleared the flash cookie")
+	}
+
+	r = httptest.NewRequest("GET", "/todo", nil)
+	r.AddCookie(cookie)
+	if msg := popFlash(httptest.NewRecorder(), r); msg != "Tersimpan" {
+		t.Fatalf("normal load got %q, want the flash", msg)
 	}
 }

@@ -96,7 +96,9 @@ CREATE INDEX IF NOT EXISTS idx_chat_user_time ON chat_messages(user_id, created_
 ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS actions       TEXT;
 ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS action_status TEXT NOT NULL DEFAULT '';
 
-ALTER TABLE user_prefs ADD COLUMN IF NOT EXISTS ui_font_size TEXT NOT NULL DEFAULT 'medium';  -- small | medium | large | xlarge
+ALTER TABLE user_prefs ADD COLUMN IF NOT EXISTS ui_font_size TEXT NOT NULL DEFAULT 'medium';  -- small | medium | large
+-- 'xlarge' (Ekstra) was dropped: it broke layouts; move anyone still on it to large.
+UPDATE user_prefs SET ui_font_size = 'large' WHERE ui_font_size = 'xlarge';
 
 CREATE TABLE IF NOT EXISTS ai_logs (
     id            BIGSERIAL PRIMARY KEY,

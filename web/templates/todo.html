@@ -1,5 +1,5 @@
 {{define "content"}}
-<div class="todo-top">
+<div class="todo-top page-top">
   <header class="todo-bar">
     <h1>Todo</h1>
     <div class="hero-side">
@@ -67,6 +67,7 @@
 })();
 </script>
 
+<div class="todo-scroll page-scroll">
 {{if not .Sections}}
 <div class="empty">
   {{template "icon-check" .}}
@@ -87,6 +88,7 @@
   {{template "todo-tasklist" .Tasks}}
 </details>
 {{end}}
+</div>
 </div>
 
 {{$r := .Here}}
