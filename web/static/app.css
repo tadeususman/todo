@@ -1459,6 +1459,9 @@ input.invalid, textarea.invalid, select.invalid { border-color: var(--danger-tex
   cursor: pointer;
 }
 .pw-toggle:hover { color: var(--text); background: var(--surface-alt); }
+/* keep the vertical centering while pressed: the global button:active scale would drop translateY,
+   the button jumps down mid-tap and the release lands outside it, so the click is lost */
+.pw-wrap .pw-toggle:active:not(:disabled) { transform: translateY(-50%) scale(.92); }
 
 /* =====================================================================
    Clean redesign: big header + progress ring, flat task rows with round

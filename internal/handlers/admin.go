@@ -54,6 +54,25 @@ func (a *App) adminSetStatus(status string) http.HandlerFunc {
 func (a *App) AdminApprove() http.HandlerFunc { return a.adminSetStatus(user.StatusApproved) }
 func (a *App) AdminReject() http.HandlerFunc  { return a.adminSetStatus(user.StatusRejected) }
 
+// AdminDeleteUser menghapus permanen user yang sudah ditolak beserta seluruh datanya.
+func (a *App) AdminDeleteUser(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	if err := user.DeleteRejected(r.Context(), a.DB, id); err != nil {
+		if err == user.ErrNotFound {
+			http.NotFound(w, r)
+			return
+		}
+		serverError(w, err)
+		return
+	}
+	a.audit(r, 0, "admin_delete_user", strconv.FormatInt(id, 10))
+	http.Redirect(w, r, "/admin/users", http.StatusSeeOther)
+}
+
 // AdminResetPassword membuat password sementara untuk user dan menampilkannya sekali (tanpa redirect, tidak disimpan).
 func (a *App) AdminResetPassword(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)

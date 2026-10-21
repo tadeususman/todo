@@ -36,7 +36,9 @@
       {{if ne .Status "approved"}}
       <form method="post" action="/admin/users/{{.ID}}/approve" class="inline"><button type="submit" class="btn-primary">Setujui</button></form>
       {{end}}
-      {{if ne .Status "rejected"}}
+      {{if eq .Status "rejected"}}
+      <form method="post" action="/admin/users/{{.ID}}/delete" class="inline" data-confirm="Hapus permanen user {{.Username}}? Semua proyek, tugas, dan chatnya ikut terhapus dan tidak bisa dikembalikan." data-confirm-ok="Hapus"><button type="submit" class="danger">Hapus</button></form>
+      {{else}}
       <form method="post" action="/admin/users/{{.ID}}/reject" class="inline" data-confirm="{{if eq .Status "approved"}}Nonaktifkan{{else}}Tolak{{end}} user {{.Username}}? Sesi loginnya akan diputus." data-confirm-ok="{{if eq .Status "approved"}}Nonaktifkan{{else}}Tolak{{end}}"><button type="submit" class="ghost">{{if eq .Status "approved"}}Nonaktifkan{{else}}Tolak{{end}}</button></form>
       {{end}}
     </div>

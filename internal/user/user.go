@@ -294,6 +294,19 @@ func SetStatus(ctx context.Context, db *sql.DB, id int64, status string) error {
 	return err
 }
 
+// DeleteRejected permanently removes a rejected non-admin user and, via ON DELETE CASCADE, all their data.
+// Active or pending users must be rejected first, so a stray click can't wipe a live account.
+func DeleteRejected(ctx context.Context, db *sql.DB, id int64) error {
+	res, err := db.ExecContext(ctx, `DELETE FROM users WHERE id = $1 AND status = $2 AND is_admin = false`, id, StatusRejected)
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 var ErrLastAdmin = errors.New("Kamu admin terakhir; tidak bisa menghapus akun ini.")
 
 // DeleteAccount permanently removes the user and, via ON DELETE CASCADE, all their data.
