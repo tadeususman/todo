@@ -19,6 +19,7 @@
 
 <section class="block">
   {{if .Today}}
+  {{if .Overdue}}<h2 class="block-title"><span>Hari ini</span><span class="pill-count">{{len .Today}}</span></h2>{{end}}
   <ul class="tasklist">{{range .Today}}{{template "taskrow" .}}{{end}}</ul>
   {{else if not .Overdue}}
   <div class="empty">
