@@ -76,14 +76,14 @@ body.theme-dark { color-scheme: dark; }
 body.theme-light { color-scheme: light; }
 @media (prefers-color-scheme: dark) { body.theme-system { color-scheme: dark; } }
 body.theme-dark {
-  --bg: #0f172a;
-  --surface: #1e293b;
-  --surface-alt: #273449;
+  --bg: #14161a;
+  --surface: #1b1e24;
+  --surface-alt: #23262d;
   --text: #f1f5f9;
   --text-muted: #94a3b8;
   --text-subtle: #64748b;
-  --border: #334155;
-  --border-soft: #273449;
+  --border: #2d3139;
+  --border-soft: #23262d;
 
   --accent: #064e3b;         /* emerald 900 — deep soft button bg */
   --accent-hover: #065f46;   /* emerald 800 */
@@ -104,14 +104,14 @@ body.theme-dark {
 /* System theme — follow OS */
 @media (prefers-color-scheme: dark) {
   body.theme-system {
-    --bg: #0f172a;
-    --surface: #1e293b;
-    --surface-alt: #273449;
+    --bg: #14161a;
+    --surface: #1b1e24;
+    --surface-alt: #23262d;
     --text: #f1f5f9;
     --text-muted: #94a3b8;
     --text-subtle: #64748b;
-    --border: #334155;
-    --border-soft: #273449;
+    --border: #2d3139;
+    --border-soft: #23262d;
 
     --accent: #064e3b;
     --accent-hover: #065f46;

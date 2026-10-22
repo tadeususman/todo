@@ -4,17 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="{{if eq .Theme "dark"}}dark{{else if eq .Theme "light"}}light{{else}}light dark{{end}}">
-  {{if eq .Theme "dark"}}<meta name="theme-color" content="#0f172a">
+  {{if eq .Theme "dark"}}<meta name="theme-color" content="#14161a">
   {{else if eq .Theme "light"}}<meta name="theme-color" content="#fbf9f5">
   {{else}}<meta name="theme-color" content="#fbf9f5" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">{{end}}
+  <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">{{end}}
   <title>todo</title>
-  <style>html{background:{{if eq .Theme "dark"}}#0f172a{{else}}#fbf9f5{{end}}}{{if eq .Theme "system"}}@media(prefers-color-scheme:dark){html{background:#0f172a}}{{end}}</style>
+  <style>html{background:{{if eq .Theme "dark"}}#14161a{{else}}#fbf9f5{{end}}}{{if eq .Theme "system"}}@media(prefers-color-scheme:dark){html{background:#14161a}}{{end}}</style>
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="48x48" href="/static/icons/favicon-48.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="/static/app.css?v=94">
+  <link rel="stylesheet" href="/static/app.css?v=96">
   {{if ne .Font "system"}}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
