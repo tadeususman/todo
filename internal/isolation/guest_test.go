@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"todo/internal/task"
 	"todo/internal/user"
 )
 
@@ -93,4 +94,24 @@ func TestGuestClaim(t *testing.T) {
 		t.Errorf("second claim: %v", err)
 	}
 	must(t, user.PurgeGuests(ctx, f.db))
+}
+
+func TestTaskUnseenUntilOpened(t *testing.T) {
+	f := setup(t)
+	ctx := context.Background()
+	id, err := task.Create(ctx, f.db, f.alice, &task.Parsed{Title: "baru"}, 0)
+	must(t, err)
+	got, err := task.Get(ctx, f.db, f.alice, id)
+	must(t, err)
+	if !got.Unseen {
+		t.Fatal("new task not marked unseen")
+	}
+	must(t, task.MarkSeen(ctx, f.db, f.bob, id)) // someone else opening it changes nothing
+	if got, _ = task.Get(ctx, f.db, f.alice, id); !got.Unseen {
+		t.Error("another user cleared the mark")
+	}
+	must(t, task.MarkSeen(ctx, f.db, f.alice, id))
+	if got, _ = task.Get(ctx, f.db, f.alice, id); got.Unseen {
+		t.Error("mark not cleared by owner")
+	}
 }

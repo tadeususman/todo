@@ -32,6 +32,7 @@ type Task struct {
 	CompletedAt      *time.Time
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
+	Unseen           bool // dibuat tapi belum pernah dibuka
 }
 
 // Parsed is the LLM-extracted task shape returned by llm.ParseTask.
@@ -51,7 +52,7 @@ const selectCols = `
     t.id, t.user_id, t.parent_id, t.project_id,
     COALESCE(p.name, ''), COALESCE(p.color, ''),
     t.title, t.description, t.status, t.priority, t.complexity,
-    t.deadline, t.estimated_minutes, t.completed_at, t.created_at, t.updated_at`
+    t.deadline, t.estimated_minutes, t.completed_at, t.created_at, t.updated_at, t.unseen`
 
 // ErrParentInvalid is returned when a subtask's parent doesn't exist or belongs to someone else.
 var ErrParentInvalid = errors.New("task induk tidak ditemukan")
@@ -60,8 +61,8 @@ var ErrParentInvalid = errors.New("task induk tidak ditemukan")
 func Create(ctx context.Context, db *sql.DB, userID int64, p *Parsed, projectID int64) (int64, error) {
 	var id int64
 	err := db.QueryRowContext(ctx, `
-		INSERT INTO tasks (user_id, project_id, title, description, priority, complexity, deadline, estimated_minutes)
-		SELECT $1, $2, $3, $4, $5, $6, $7, $8
+		INSERT INTO tasks (user_id, project_id, title, description, priority, complexity, deadline, estimated_minutes, unseen)
+		SELECT $1, $2, $3, $4, $5, $6, $7, $8, true
 		WHERE $2::bigint IS NULL OR EXISTS (SELECT 1 FROM projects WHERE id = $2 AND user_id = $1)
 		RETURNING id`,
 		userID, nullID(projectID), p.Title, p.Description, NormPriority(p.Priority),
@@ -71,6 +72,12 @@ func Create(ctx context.Context, db *sql.DB, userID int64, p *Parsed, projectID 
 		return 0, ErrProjectInvalid
 	}
 	return id, err
+}
+
+// MarkSeen clears the "new" mark once the user has opened the task.
+func MarkSeen(ctx context.Context, db *sql.DB, userID, id int64) error {
+	_, err := db.ExecContext(ctx, `UPDATE tasks SET unseen = false WHERE id = $1 AND user_id = $2 AND unseen`, id, userID)
+	return err
 }
 
 // CreateSub inserts a task that lives under a parent task. Both parentID and projectID must belong to userID.
@@ -107,7 +114,7 @@ func Get(ctx context.Context, db *sql.DB, userID, id int64) (*Task, error) {
 		id, userID,
 	).Scan(&t.ID, &t.UserID, &t.ParentID, &t.ProjectID, &t.ProjectName, &t.ProjectColor,
 		&t.Title, &t.Description, &t.Status, &t.Priority, &t.Complexity, &t.Deadline,
-		&t.EstimatedMinutes, &t.CompletedAt, &t.CreatedAt, &t.UpdatedAt)
+		&t.EstimatedMinutes, &t.CompletedAt, &t.CreatedAt, &t.UpdatedAt, &t.Unseen)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +340,7 @@ func scanTasks(rows *sql.Rows) ([]Task, error) {
 		var t Task
 		if err := rows.Scan(&t.ID, &t.UserID, &t.ParentID, &t.ProjectID, &t.ProjectName, &t.ProjectColor,
 			&t.Title, &t.Description, &t.Status, &t.Priority, &t.Complexity, &t.Deadline,
-			&t.EstimatedMinutes, &t.CompletedAt, &t.CreatedAt, &t.UpdatedAt); err != nil {
+			&t.EstimatedMinutes, &t.CompletedAt, &t.CreatedAt, &t.UpdatedAt, &t.Unseen); err != nil {
 			return nil, err
 		}
 		out = append(out, t)

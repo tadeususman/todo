@@ -185,6 +185,10 @@ func (a *App) TaskView(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	// A speculative prerender (see speculationrules in layout) is not the user opening the task.
+	if t.Unseen && !strings.Contains(r.Header.Get("Sec-Purpose"), "prefetch") {
+		_ = task.MarkSeen(r.Context(), a.DB, uid, id)
+	}
 	subs, _ := task.ListSubtasks(r.Context(), a.DB, uid, id)
 	doneCount := 0
 	for _, s := range subs {

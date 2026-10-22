@@ -153,3 +153,6 @@ CREATE TABLE IF NOT EXISTS app_kv (
 ALTER TABLE users ADD COLUMN IF NOT EXISTS guest_until TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_used INT NOT NULL DEFAULT 0;
 CREATE INDEX IF NOT EXISTS idx_users_guest_until ON users(guest_until) WHERE guest_until IS NOT NULL;
+
+-- Task yang baru dibuat tampil tebal sampai pertama kali dibuka (task lama tidak ditandai).
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS unseen BOOLEAN NOT NULL DEFAULT false;
