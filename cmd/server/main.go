@@ -132,7 +132,7 @@ func main() {
 	r.Use(authmw.SameOrigin)
 
 	// static
-	fs := noDirListing(http.FileServer(http.Dir("web/static")))
+	fs := staticCache(noDirListing(http.FileServer(http.Dir("web/static"))))
 	r.Handle("/static/*", http.StripPrefix("/static/", fs))
 	r.Get("/sw.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/javascript")
@@ -295,6 +295,19 @@ func bootstrapAdmin(ctx context.Context, db *sql.DB, username, password string) 
 	_, err = db.ExecContext(ctx,
 		`UPDATE users SET is_admin = true, status = 'approved' WHERE lower(username) = lower($1)`, username)
 	return err
+}
+
+// staticCache lets browsers keep static files: URLs with ?v=N change whenever the file does (see the
+// cache-bump rule in layout.html), so those never need re-checking; the rest are re-checked hourly.
+func staticCache(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("v") != "" {
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		} else {
+			w.Header().Set("Cache-Control", "public, max-age=3600")
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // noDirListing answers 404 for directory paths so http.FileServer doesn't expose file listings.

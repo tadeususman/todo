@@ -1,7 +1,7 @@
 // Service worker — network-first for everything so updates propagate instantly.
 // Only public static assets are cached (offline fallback); pages with user data never are.
 
-const CACHE = 'todo-v46';
+const CACHE = 'todo-v47';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
@@ -11,7 +11,8 @@ self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    ).then(() => self.registration.navigationPreload && self.registration.navigationPreload.enable())
+      .then(() => self.clients.claim())
   );
 });
 
@@ -20,20 +21,17 @@ self.addEventListener('fetch', (e) => {
 
   const url = new URL(e.request.url);
 
-  // Never cache HTML pages or static assets — always fresh from network.
-  // Only fall back to cache for navigation when fully offline.
-  const isStatic = url.pathname.startsWith('/static/');
+  // Static files: left to the browser's HTTP cache (the server marks ?v=N URLs immutable).
+  // Pages are never stored; offline shows a small notice.
+  if (url.pathname.startsWith('/static/')) return;
   const isNav = e.request.mode === 'navigate';
-
-  if (isStatic) {
-    e.respondWith(fetch(e.request, { cache: 'no-store' }).catch(() => caches.match(e.request).then((r) => r || Response.error())));
-    return;
-  }
 
   // Pages are never stored: they hold private data, and a cached copy would stay readable after logout.
   if (isNav) {
+    // preloadResponse is the page request the browser already started while this worker woke up.
     e.respondWith(
-      fetch(e.request).catch(() => new Response(OFFLINE_HTML, { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }))
+      (async () => (await e.preloadResponse) || fetch(e.request))()
+        .catch(() => new Response(OFFLINE_HTML, { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }))
     );
     return;
   }

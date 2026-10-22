@@ -9,11 +9,12 @@
   {{else}}<meta name="theme-color" content="#fbf9f5" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">{{end}}
   <title>todo</title>
+  <style>html{background:{{if eq .Theme "dark"}}#0f172a{{else}}#fbf9f5{{end}}}{{if eq .Theme "system"}}@media(prefers-color-scheme:dark){html{background:#0f172a}}{{end}}</style>
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="48x48" href="/static/icons/favicon-48.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="/static/app.css?v=93">
+  <link rel="stylesheet" href="/static/app.css?v=94">
   {{if ne .Font "system"}}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,8 +26,8 @@
 <body class="theme-{{.Theme}} font-{{.Font}}">
   <div id="splash" class="splash" aria-hidden="true">
     <div class="brand-mark">
-      <img class="logo-light" src="/static/icons/logo-animated-light.svg?v=2" alt="" width="240" height="172">
-      <img class="logo-dark" src="/static/icons/logo-animated-dark.svg?v=2" alt="" width="240" height="172">
+      {{if ne .Theme "dark"}}<img class="logo-light" src="/static/icons/logo-animated-light.svg?v=2" alt="" width="240" height="172">{{end}}
+      {{if ne .Theme "light"}}<img class="logo-dark" src="/static/icons/logo-animated-dark.svg?v=2" alt="" width="240" height="172">{{end}}
     </div>
   </div>
   <script>
@@ -34,7 +35,7 @@
       var el = document.getElementById('splash');
       try { if (sessionStorage.getItem('splash')) { el.remove(); return; } sessionStorage.setItem('splash', '1'); } catch (e) {}
       document.body.classList.add('splash-on');
-      setTimeout(function () { el.classList.add('splash-out'); setTimeout(function () { el.remove(); document.body.classList.remove('splash-on'); }, 400); }, 1800);
+      setTimeout(function () { el.classList.add('splash-out'); setTimeout(function () { el.remove(); document.body.classList.remove('splash-on'); }, 400); }, 1200);
     })();
   </script>
   <main class="container">
