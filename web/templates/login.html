@@ -1,11 +1,12 @@
 {{define "content"}}
-<div class="auth-container">
+<div class="auth-container login">
   {{template "authbrand"}}
+  <p class="login-tag">Catat apa saja, biar kami yang merapikan.</p>
 
   {{if .Error}}<div class="error">{{.Error}}</div>{{end}}
   {{if .Info}}<div class="info">{{.Info}}</div>{{end}}
 
-  <form method="post" action="/login" class="stack" novalidate data-validate>
+  <form method="post" action="/login" class="login-form" novalidate data-validate>
     <label class="field">
       <span>Username atau email</span>
       <input type="text" name="username" autocomplete="username" required autofocus>
@@ -14,11 +15,19 @@
       <span>Password</span>
       <input type="password" name="password" autocomplete="current-password" required>
     </label>
-    <button type="submit">Masuk</button>
+    <a class="login-forgot" href="/forgot">Lupa password?</a>
+    <button type="submit" class="login-btn">Masuk</button>
   </form>
-  <p class="auth-alt"><a href="/forgot">Lupa password?</a></p>
-  <p class="auth-alt"><a href="/privasi">Kebijakan privasi</a></p>
-  <p class="auth-alt">Belum punya akun? <a href="/register">Daftar</a></p>
+
+  <div class="login-or"><span>atau</span></div>
+
+  <form method="post" action="/coba" class="login-guest">
+    <button type="submit" class="login-btn login-btn-alt">Coba dulu tanpa daftar</button>
+    <p>Gratis 24 jam, tanpa email.</p>
+  </form>
+
+  <p class="login-signup">Belum punya akun? <a href="/register">Daftar</a></p>
+  <p class="login-foot"><a href="/privasi">Kebijakan privasi</a></p>
 </div>
 
 <script>document.body.classList.add('auth')</script>

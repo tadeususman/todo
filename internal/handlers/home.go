@@ -61,5 +61,7 @@ func (a *App) HomePage(w http.ResponseWriter, r *http.Request) {
 		"Done":      done,
 		"Percent":   percent,
 		"HasRing":   total > 0,
+		// open tasks scheduled later or without a deadline: they never show on this page
+		"OtherOpen": len(all) - len(today) - len(overdue),
 	})
 }

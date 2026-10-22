@@ -95,7 +95,7 @@ body.theme-dark {
   --danger-hover: #991b1b;   /* red 800 */
   --danger-soft: rgba(239, 68, 68, 0.15);
   --danger-text: #fecaca;    /* red 200 */
-  --late: #f87171;           /* red 400: overdue labels read red, not pink, on the dark ground */
+  --late: #ef4444;           /* red 500: overdue labels read clearly red, not pink, on the dark ground */
 
   --warn: #78350f;
   --warn-soft: rgba(245, 158, 11, 0.15);
@@ -123,7 +123,7 @@ body.theme-dark {
     --danger-hover: #991b1b;
     --danger-soft: rgba(239, 68, 68, 0.15);
     --danger-text: #fecaca;
-    --late: #f87171;
+    --late: #ef4444;
 
     --warn: #78350f;
     --warn-soft: rgba(245, 158, 11, 0.15);
@@ -1069,7 +1069,7 @@ body.theme-dark .fab { box-shadow: 0 6px 20px rgba(52, 211, 153, 0.25); }
 .row-value input.dl-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; }
 .dl-text { white-space: nowrap; }
 .dl-text.is-empty { color: var(--text-subtle); }
-.dl-text.overdue { color: var(--danger-text); }
+.dl-text.overdue { color: var(--late); }
 .row-value .pill-clear { position: relative; z-index: 1; }
 .row-value input.num { width: 2.25rem; field-sizing: content; min-width: 1.5ch; text-transform: none; cursor: text; }
 .row-value input.num::placeholder { color: var(--text-subtle); }
@@ -1551,7 +1551,7 @@ input.invalid, textarea.invalid, select.invalid { border-color: var(--danger-tex
 }
 .task.done .tag { opacity: .55; }
 .when { color: var(--text-muted); }
-.when.late { color: var(--danger-text); font-weight: 500; }
+.when.late { color: var(--late); font-weight: 500; }
 .prio { font-size: .6875rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 .prio-urgent { color: var(--p-urgent); }
 .prio-high { color: var(--p-high); }
@@ -1971,3 +1971,33 @@ body:has(.page-top) .chat-input { position: static; flex-shrink: 0; margin: 0 -1
 /* message opened from a search result */
 .msg-found .msg-bubble { animation: msg-found 2.4s ease; }
 @keyframes msg-found { 0%, 60% { box-shadow: 0 0 0 3px var(--warn); } 100% { box-shadow: 0 0 0 3px transparent; } }
+
+/* mode coba (akun tamu) */
+.guest-bar { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .75rem; padding: .5rem .875rem; border-radius: 12px; background: var(--accent-soft); color: var(--accent-text); font-size: .8125rem; text-decoration: none; }
+.guest-bar strong { color: var(--accent-strong); font-weight: 600; white-space: nowrap; }
+
+/* login page */
+.login .brand-mark { margin-bottom: .75rem; }
+.login-tag { margin: 0 0 2rem; text-align: center; font-size: .9375rem; color: var(--text-muted); }
+.login-form { display: flex; flex-direction: column; gap: 1rem; }
+.login-form input { padding: .875rem 1rem; border-radius: 14px; }
+.login-forgot { align-self: flex-end; margin-top: -.5rem; font-size: .8125rem; font-weight: 600; color: var(--text-muted); text-decoration: none; }
+.login-forgot:hover { color: var(--accent-strong); }
+.login-btn { width: 100%; padding: .9375rem 1.25rem; border-radius: 14px; font-size: 1rem; }
+.login-form .login-btn { margin-top: .25rem; }
+button.login-btn-alt { background: transparent; color: var(--text); border: 1.5px solid var(--border); }
+button.login-btn-alt:hover { background: var(--surface-alt); }
+.login-or { display: flex; align-items: center; gap: .875rem; margin: 1.5rem 0; font-size: .8125rem; color: var(--text-subtle); }
+.login-or::before, .login-or::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.login-guest { margin: 0; }
+.login-guest p { margin: .5rem 0 0; text-align: center; font-size: .8125rem; color: var(--text-muted); }
+.login-signup { margin: 1.75rem 0 0; text-align: center; font-size: .9375rem; color: var(--text-muted); }
+.login-signup a { color: var(--accent-strong); font-weight: 600; text-decoration: none; }
+.login-foot { margin: 1rem 0 0; text-align: center; font-size: .8125rem; }
+.login-foot a { color: var(--text-subtle); text-decoration: none; }
+.login-foot a:hover { color: var(--text-muted); }
+.login-hint { font-size: .75rem; font-weight: 400; color: var(--text-subtle); }
+.login-note { margin: -.25rem 0 0; text-align: center; font-size: .8125rem; color: var(--text-muted); }
+.flash-ok { background: var(--accent-soft); color: var(--accent-text); }
+.empty .empty-hint { margin-top: .375rem; font-size: .8125rem; color: var(--text-subtle); }
+.empty-link { display: inline-block; margin-top: .75rem; padding: .5rem .875rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-size: .8125rem; font-weight: 600; text-decoration: none; }

@@ -32,6 +32,20 @@ func UserID(r *http.Request) int64 {
 	return v
 }
 
+// BlockGuests rejects temporary guest accounts on routes that only make sense for real accounts
+// (credentials, export, delete, push). Must run after RequireAuth.
+func BlockGuests(db *sql.DB) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if guest, _, _ := user.GuestState(r.Context(), db, UserID(r)); guest {
+				http.Error(w, "Tidak tersedia di mode coba. Daftar dulu untuk memakai fitur ini.", http.StatusForbidden)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 // RequireAdmin must run after RequireAuth. Non-admins get 404 so the admin area isn't advertised.
 func RequireAdmin(db *sql.DB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

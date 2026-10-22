@@ -255,7 +255,7 @@ func ResetPassword(ctx context.Context, db *sql.DB, id int64) (string, error) {
 // List returns all users, pending first, then newest.
 func List(ctx context.Context, db *sql.DB) ([]User, error) {
 	rows, err := db.QueryContext(ctx, `
-		SELECT id, username, coalesce(email, ''), status, is_admin, created_at, reset_requested_at FROM users
+		SELECT id, username, coalesce(email, ''), status, is_admin, created_at, reset_requested_at FROM users WHERE guest_until IS NULL
 		ORDER BY (status = 'pending' OR reset_requested_at IS NOT NULL) DESC, created_at DESC`)
 	if err != nil {
 		return nil, err

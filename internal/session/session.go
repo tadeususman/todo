@@ -64,7 +64,8 @@ func (m *Manager) UserID(r *http.Request) (int64, bool) {
 	// Hanya user berstatus approved yang dianggap login (reject/revoke langsung memutus sesi).
 	err = m.db.QueryRowContext(r.Context(),
 		`SELECT s.user_id FROM sessions s JOIN users u ON u.id = s.user_id
-		 WHERE s.id = $1 AND s.expires_at > now() AND u.status = 'approved'`,
+		 WHERE s.id = $1 AND s.expires_at > now() AND u.status = 'approved'
+		   AND (u.guest_until IS NULL OR u.guest_until > now())`,
 		c.Value).Scan(&userID)
 	if err != nil {
 		return 0, false

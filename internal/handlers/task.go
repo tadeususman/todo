@@ -45,12 +45,16 @@ func (a *App) TaskCreate(w http.ResponseWriter, r *http.Request) {
 		names = append(names, p.Name)
 	}
 
-	parsed, err := a.LLM.ParseTask(ctx, input, names)
+	parsed, err := a.parseTask(ctx, r, uid, input, names)
 	var notTask *llm.NotTaskError
 	if errors.As(err, &notTask) {
 		setFlash(w, notTask.Message)
 		http.Redirect(w, r, safeRedirect(r.FormValue("redirect"), "/home"), http.StatusSeeOther)
 		return
+	}
+	quotaFull := errors.Is(err, errGuestAIFull)
+	if quotaFull {
+		setFlash(w, guestAIFull+" Task disimpan apa adanya.")
 	}
 	if err != nil {
 		// Fallback: simpan apa adanya sebagai title, biar user ga kehilangan input.
@@ -87,6 +91,9 @@ func (a *App) TaskCreate(w http.ResponseWriter, r *http.Request) {
 	if _, err := task.Create(ctx, a.DB, uid, parsed, projectID); err != nil {
 		serverError(w, err)
 		return
+	}
+	if !quotaFull { // keep the quota notice instead
+		setFlashOK(w, "Task berhasil dibuat.")
 	}
 	http.Redirect(w, r, safeRedirect(r.FormValue("redirect"), "/home"), http.StatusSeeOther)
 }
@@ -138,12 +145,15 @@ func (a *App) TaskCreateSubtask(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/tasks/"+chi.URLParam(r, "id"), http.StatusSeeOther)
 		return
 	}
-	parsed, err := a.LLM.ParseTask(ctx, input, names)
+	parsed, err := a.parseTask(ctx, r, uid, input, names)
 	var notTask *llm.NotTaskError
 	if errors.As(err, &notTask) {
 		setFlash(w, notTask.Message)
 		http.Redirect(w, r, "/tasks/"+chi.URLParam(r, "id"), http.StatusSeeOther)
 		return
+	}
+	if errors.Is(err, errGuestAIFull) {
+		setFlash(w, guestAIFull+" Task disimpan apa adanya.")
 	}
 	if err != nil {
 		parsed = &task.Parsed{Title: input, Priority: "medium", Complexity: "simple"}

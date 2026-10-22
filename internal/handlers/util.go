@@ -77,6 +77,12 @@ func setFlash(w http.ResponseWriter, msg string) {
 	http.SetCookie(w, &http.Cookie{Name: flashCookie, Value: url.QueryEscape(msg), Path: "/", MaxAge: 60, HttpOnly: true, SameSite: http.SameSiteLaxMode})
 }
 
+// flashOKPrefix marks a flash as a success message (rendered green instead of amber).
+const flashOKPrefix = "ok:"
+
+// setFlashOK is setFlash for a success confirmation.
+func setFlashOK(w http.ResponseWriter, msg string) { setFlash(w, flashOKPrefix+msg) }
+
 // popFlash reads and clears the flash message.
 func popFlash(w http.ResponseWriter, r *http.Request) string {
 	// A speculative load (prefetch/prerender, see speculationrules in layout) may never be shown,

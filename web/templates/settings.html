@@ -29,6 +29,18 @@
     </a>
     {{end}}
 
+    {{if .IsGuest}}
+    <div class="set-form set-form-stack" id="daftar">
+      <p class="set-hint">Kamu sedang di mode coba. Datanya dihapus {{.GuestLeft}}. Daftar untuk menyimpannya; setelah disetujui admin, task ini ikut terbawa.</p>
+      <form method="post" action="/account/claim" class="set-form-stack" novalidate data-validate>
+        <input type="text" name="username" placeholder="Username" required minlength="3" maxlength="32" autocomplete="username" aria-label="Username">
+        <input type="email" name="email" placeholder="Email" required maxlength="254" autocomplete="email" aria-label="Email">
+        <input type="password" name="password" placeholder="Password (min. 8 karakter)" required minlength="8" maxlength="72" autocomplete="new-password">
+        <input type="password" name="confirm" placeholder="Ulangi password" required minlength="8" maxlength="72" autocomplete="new-password">
+        <button type="submit" class="set-btn">Daftar &amp; simpan data</button>
+      </form>
+    </div>
+    {{else}}
     <details class="set-item">
       <summary class="set-row">
         <span class="set-label">Username</span>
@@ -66,6 +78,7 @@
         <button type="submit" class="set-btn">Ganti password</button>
       </form>
     </details>
+    {{end}}
   </div>
 </section>
 
@@ -168,6 +181,7 @@
 </section>
 
 <!-- Notifikasi -->
+{{if not .IsGuest}}
 <section class="set-section" id="push-section" data-key="{{.PushKey}}">
   <h2 class="set-title">Notifikasi</h2>
   <div class="set-group">
@@ -194,6 +208,7 @@
   </div>
   <p class="set-hint set-hint-pad">Pengingat dikirim sekali per task, sebelum deadline. {{if .PushDevices}}{{.PushDevices}} perangkat terdaftar.{{else}}Belum ada perangkat terdaftar.{{end}}</p>
 </section>
+{{end}}
 
 <!-- Arsip -->
 <section class="set-section">
@@ -215,6 +230,7 @@
       <span class="set-value"></span>
       <svg class="set-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
+    {{if not .IsGuest}}
     <a href="/account/export" class="set-row" download>
       <span class="set-label">Unduh data saya</span>
       <span class="set-value muted">JSON</span>
@@ -232,13 +248,14 @@
         <button type="submit" class="set-link-danger">Hapus akun permanen</button>
       </form>
     </details>
+    {{end}}
   </div>
 </section>
 
 <!-- Keluar -->
 <section class="set-section">
   <form method="post" action="/logout" class="set-group">
-    <button type="submit" class="set-row set-logout">Keluar</button>
+    <button type="submit" class="set-row set-logout"{{if .IsGuest}} data-confirm="Keluar dari mode coba? Datamu tidak bisa dipulihkan." data-confirm-ok="Keluar"{{end}}>Keluar</button>
   </form>
 </section>
 

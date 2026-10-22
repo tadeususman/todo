@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"todo/internal/llm"
@@ -18,6 +19,7 @@ import (
 	"todo/internal/prefs"
 	"todo/internal/push"
 	"todo/internal/session"
+	"todo/internal/user"
 )
 
 var (
@@ -127,6 +129,7 @@ type App struct {
 	AndroidPackage  string
 	AndroidSHA256   string // comma-separated
 	RegLimiter      *authmw.LoginLimiter
+	GuestLimiter    *authmw.LoginLimiter
 	Pages           map[string]*template.Template // one fully-parsed set per page, built at startup
 }
 
@@ -190,12 +193,21 @@ func (a *App) render(w http.ResponseWriter, r *http.Request, name string, data m
 		if p, err := prefs.Get(r.Context(), a.DB, uid); err == nil {
 			theme, font, size = p.Theme, p.Font, p.Size
 		}
+		if guest, until, left := user.GuestState(r.Context(), a.DB, uid); guest {
+			data["IsGuest"] = true
+			data["GuestLeft"] = guestLeftLabel(until)
+			data["GuestAILeft"] = left
+		}
 	}
 	data["Theme"] = theme
 	data["Font"] = font
 	data["Size"] = size
 	data["ResetEnabled"] = a.resetEnabled()
 	if msg := popFlash(w, r); msg != "" {
+		if rest, ok := strings.CutPrefix(msg, flashOKPrefix); ok {
+			data["FlashOK"] = true
+			msg = rest
+		}
 		data["Flash"] = msg
 	}
 

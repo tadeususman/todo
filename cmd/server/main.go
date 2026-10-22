@@ -71,6 +71,9 @@ func main() {
 				log.Printf("purge sessions: %v", err)
 			}
 			_ = user.PurgeResets(ctx, pool)
+			if err := user.PurgeGuests(ctx, pool); err != nil {
+				log.Printf("purge guests: %v", err)
+			}
 			// Retensi: isi chat/prompt LLM disimpan sementara saja; audit log lebih lama.
 			if _, err := pool.ExecContext(ctx, `DELETE FROM ai_logs WHERE created_at < now() - make_interval(days => $1)`, cfg.AILogRetentionDays); err != nil {
 				log.Printf("purge ai_logs: %v", err)
@@ -116,6 +119,7 @@ func main() {
 		AndroidPackage:  cfg.AndroidPackage,
 		AndroidSHA256:   cfg.AndroidSHA256,
 		RegLimiter:      authmw.NewLoginLimiter(5, time.Hour),
+		GuestLimiter:    authmw.NewLoginLimiter(5, time.Hour),
 		Pages:           tmpl,
 	}
 
@@ -163,6 +167,7 @@ func main() {
 	r.Post("/logout", app.Logout)
 	r.Get("/register", app.RegisterPage)
 	r.Post("/register", app.RegisterSubmit)
+	r.Post("/coba", app.GuestStart)
 	r.Get("/privasi", app.PrivacyPage)
 	r.Get("/hapus-akun", app.DeleteAccountInfoPage)
 	r.Get("/.well-known/assetlinks.json", app.AssetLinks)
@@ -201,11 +206,20 @@ func main() {
 		r.Post("/projects/{id}/rename", app.ProjectRename)
 		r.Post("/projects/{id}/delete", app.ProjectDelete)
 
-		r.Post("/account/username", app.AccountUsername)
-		r.Post("/account/email", app.AccountEmail)
-		r.Post("/account/password", app.AccountPassword)
-		r.Get("/account/export", app.AccountExport)
-		r.Post("/account/delete", app.AccountDelete)
+		r.Post("/account/claim", app.AccountClaim)
+
+		// Real accounts only: temporary guest accounts get 403.
+		r.Group(func(r chi.Router) {
+			r.Use(authmw.BlockGuests(pool))
+			r.Post("/account/username", app.AccountUsername)
+			r.Post("/account/email", app.AccountEmail)
+			r.Post("/account/password", app.AccountPassword)
+			r.Get("/account/export", app.AccountExport)
+			r.Post("/account/delete", app.AccountDelete)
+			r.Post("/push/subscribe", app.PushSubscribe)
+			r.Post("/push/unsubscribe", app.PushUnsubscribe)
+			r.Post("/push/test", app.PushTest)
+		})
 
 		r.Group(func(r chi.Router) {
 			r.Use(authmw.RequireAdmin(pool))
@@ -222,9 +236,6 @@ func main() {
 		r.Post("/prefs/font", app.PrefsSetFont)
 		r.Post("/prefs/size", app.PrefsSetSize)
 		r.Post("/prefs/remind", app.PrefsSetRemind)
-		r.Post("/push/subscribe", app.PushSubscribe)
-		r.Post("/push/unsubscribe", app.PushUnsubscribe)
-		r.Post("/push/test", app.PushTest)
 
 		r.Post("/chat", app.ChatSend)
 		r.Post("/chat/clear", app.ChatClear)

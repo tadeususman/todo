@@ -1,11 +1,11 @@
 {{define "content"}}
-<div class="auth-container">
+<div class="auth-container login">
   {{template "authbrand"}}
-  <h1 class="auth-title">Daftar</h1>
+  <p class="login-tag">Buat akun untuk menyimpan task kamu.</p>
 
   {{if .Error}}<div class="error">{{.Error}}</div>{{end}}
 
-  <form method="post" action="/register" class="stack" novalidate data-validate>
+  <form method="post" action="/register" class="login-form" novalidate data-validate>
     <label class="field">
       <span>Username</span>
       <input type="text" name="username" value="{{.Username}}" autocomplete="username" required autofocus minlength="3" maxlength="32" pattern="[a-zA-Z0-9][a-zA-Z0-9._\-]{2,31}" title="3–32 karakter: huruf, angka, titik, strip, underscore">
@@ -17,15 +17,18 @@
     <label class="field">
       <span>Password</span>
       <input type="password" name="password" autocomplete="new-password" required minlength="8" maxlength="72">
+      <small class="login-hint">Minimal 8 karakter.</small>
     </label>
     <label class="field">
       <span>Ulangi password</span>
       <input type="password" name="confirm" autocomplete="new-password" required minlength="8" maxlength="72">
     </label>
-    <button type="submit">Daftar</button>
+    <button type="submit" class="login-btn">Daftar</button>
+    <p class="login-note">Akun baru perlu disetujui admin sebelum bisa dipakai.</p>
   </form>
-  <p class="auth-alt">Sudah punya akun? <a href="/login">Masuk</a></p>
-  <p class="auth-alt">Akun baru perlu disetujui admin sebelum bisa dipakai.</p>
+
+  <p class="login-signup">Sudah punya akun? <a href="/login">Masuk</a></p>
+  <p class="login-foot"><a href="/privasi">Kebijakan privasi</a></p>
 </div>
 
 <script>document.body.classList.add('auth')</script>

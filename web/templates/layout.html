@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="48x48" href="/static/icons/favicon-48.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="/static/app.css?v=85">
+  <link rel="stylesheet" href="/static/app.css?v=91">
   {{if ne .Font "system"}}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,7 +38,8 @@
     })();
   </script>
   <main class="container">
-    {{if .Flash}}<div class="flash" id="flash" role="status"><span>{{.Flash}}</span><button type="button" class="flash-close" aria-label="Tutup" onclick="this.parentNode.remove()">&times;</button></div>{{end}}
+    {{if .IsGuest}}<a class="guest-bar" href="/settings#daftar"><span>Mode coba &middot; dihapus {{.GuestLeft}} &middot; AI {{.GuestAILeft}}x lagi</span><strong>Daftar</strong></a>{{end}}
+    {{if .Flash}}<div class="flash{{if .FlashOK}} flash-ok{{end}}" id="flash" role="status"><span>{{.Flash}}</span><button type="button" class="flash-close" aria-label="Tutup" onclick="this.parentNode.remove()">&times;</button></div>{{end}}
     {{template "content" .}}
   </main>
 
@@ -127,7 +128,7 @@
         var f = form && form.elements;
         if (!f || !f.project_id || !f.priority || !f.deadline) return { msgs: busyDefault, saving: false };
         var autoProject = !f.project_id.value, autoPrio = !f.priority.value, autoDl = !f.deadline.value;
-        if (!autoProject && !autoPrio && !autoDl) return { msgs: ['Menyimpan task kamu…', 'Hampir selesai…'], saving: true };
+        if (!autoProject && !autoPrio && !autoDl) return { msgs: ['Membaca task kamu…', 'Merapikan judul & keterangan…', 'Hampir selesai…'], saving: false };
         var m = ['Membaca task kamu…'];
         if (autoPrio && autoDl) m.push('Menentukan prioritas & deadline…');
         else if (autoPrio) m.push('Menentukan prioritas…');
@@ -225,7 +226,7 @@
         if (el.classList && el.classList.contains('invalid')) setFieldError(el, fieldMsg(el, el.form));
       });
 
-      var fl = document.getElementById('flash'); if (fl) setTimeout(function () { fl.remove(); }, 9000);
+      var fl = document.getElementById('flash'); if (fl) setTimeout(function () { fl.remove(); }, fl.classList.contains('flash-ok') ? 4000 : 9000);
 
 
       // Animasi centang: beri efek dulu, baru kirim form (daftar task & sub-task)

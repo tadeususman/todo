@@ -147,3 +147,9 @@ CREATE TABLE IF NOT EXISTS app_kv (
     key   TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
+
+-- Mode coba: akun tamu sementara. guest_until terisi = akun tamu, dihapus otomatis (beserta datanya) setelah lewat.
+-- ai_used menghitung pemakaian AI tamu supaya kuota LLM terjaga.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS guest_until TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_used INT NOT NULL DEFAULT 0;
+CREATE INDEX IF NOT EXISTS idx_users_guest_until ON users(guest_until) WHERE guest_until IS NOT NULL;

@@ -106,8 +106,19 @@ func (a *App) ChatSend(w http.ResponseWriter, r *http.Request) {
 	tasks, _ := task.ListOpen(r.Context(), a.DB, uid)
 	projects, _ := project.List(r.Context(), a.DB, uid)
 
-	reply, proposed, err := a.LLM.Chat(r.Context(), username, history, input, tasks, projects)
-	if err != nil {
+	var (
+		reply    string
+		proposed []chat.Action
+	)
+	if !a.allowAI(r, uid) {
+		err = errGuestAIFull
+		reply = guestAIFull
+	} else {
+		reply, proposed, err = a.LLM.Chat(r.Context(), username, history, input, tasks, projects)
+	}
+	if errors.Is(err, errGuestAIFull) {
+		proposed = nil
+	} else if err != nil {
 		log.Printf("chat llm: %v", err)
 		reply = "Maaf, asisten lagi tidak bisa dihubungi. Coba lagi sebentar."
 		proposed = nil

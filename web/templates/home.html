@@ -23,7 +23,10 @@
   {{else if not .Overdue}}
   <div class="empty">
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
-    <p>{{if .Done}}Semua selesai. Mantap!{{else}}Belum ada task hari ini. Tap + untuk menambah.{{end}}</p>
+    {{if .Done}}<p>Semua selesai. Mantap!</p>
+    {{else if .OtherOpen}}<p>Hari ini kosong.</p>
+    {{else}}<p>Belum ada task.</p><p class="empty-hint">Tap + lalu ketik bebas, misalnya &ldquo;besok jam 10 rapat tim&rdquo;.</p>{{end}}
+    {{if .OtherOpen}}<a href="/todo" class="empty-link">{{.OtherOpen}} task lain di jadwal berikutnya. Lihat semua &rarr;</a>{{end}}
   </div>
   {{end}}
 </section>
@@ -35,5 +38,5 @@
 </section>
 {{end}}
 
-{{template "quickadd" (dict "R" "/home" "Projects" .Projects)}}
+{{template "quickadd" (dict "R" "/todo" "Projects" .Projects)}}
 {{end}}
