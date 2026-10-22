@@ -313,5 +313,14 @@
     });
   })();
 </script>
+{{if .Unseen}}
+<script>
+  // Dibuka lewat prerender = tidak ada permintaan baru ke server, jadi tandai "sudah dibuka" dari sini saat halaman benar-benar ditampilkan.
+  (function () {
+    function mark() { fetch('/tasks/{{.ID}}/seen', { method: 'POST', keepalive: true, credentials: 'same-origin' }); }
+    if (document.prerendering) document.addEventListener('prerenderingchange', mark, { once: true }); else mark();
+  })();
+</script>
+{{end}}
 {{end}}
 {{end}}

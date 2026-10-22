@@ -438,6 +438,17 @@ func (a *App) TaskBulk(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, back, http.StatusSeeOther)
 }
 
+// TaskSeen clears the "new" mark; the detail page calls it when it is actually shown (a prerendered page makes no request of its own).
+func (a *App) TaskSeen(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	_ = task.MarkSeen(r.Context(), a.DB, authmw.UserID(r), id)
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (a *App) TaskArchive() http.HandlerFunc   { return a.taskSetArchived(true) }
 func (a *App) TaskUnarchive() http.HandlerFunc { return a.taskSetArchived(false) }
 

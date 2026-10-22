@@ -194,6 +194,7 @@ func main() {
 		r.Post("/tasks/bulk", app.TaskBulk)
 		r.Get("/tasks/{id}", app.TaskView)
 		r.Post("/tasks/{id}/edit", app.TaskEdit)
+		r.Post("/tasks/{id}/seen", app.TaskSeen)
 		r.Post("/tasks/{id}/subtasks", app.TaskCreateSubtask)
 		r.Post("/tasks/{id}/status", app.TaskUpdateStatus)
 		r.Post("/tasks/{id}/project", app.TaskSetProject)
