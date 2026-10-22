@@ -2016,6 +2016,6 @@ button.login-btn-alt:hover { background: var(--surface-alt); }
 @keyframes ss-rot { to { transform: rotate(360deg); } }
 @keyframes ss-in { from { opacity: 0; transform: translateY(-2px); } }
 @media (prefers-reduced-motion: reduce) { .ss, .ss-spin { animation: none; } }
-/* task baru: titik hijau di kiri baris + judul tebal, seperti tanda "belum dibaca" */
-.task.unseen::before { content: ""; position: absolute; left: .0625rem; top: 1.78rem; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-strong); }
+/* task baru: titik hijau di kanan baris + judul tebal, seperti tanda "belum dibaca" */
+.task.unseen::before { content: ""; position: absolute; right: .5rem; top: .75rem; width: 9px; height: 9px; border-radius: 50%; background: var(--accent-strong); }
 .task.unseen .task-title { font-weight: 700; color: var(--text); }

@@ -95,6 +95,7 @@ func (a *App) RegisterSubmit(w http.ResponseWriter, r *http.Request) {
 		serverError(w, err)
 		return
 	}
+	a.notifySignup(r, "pendaftar baru", username, r.FormValue("email"))
 	a.render(w, r, "register_done.html", map[string]any{})
 }
 

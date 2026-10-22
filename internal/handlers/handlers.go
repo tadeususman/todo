@@ -16,6 +16,7 @@ import (
 	"todo/internal/llm"
 	"todo/internal/mail"
 	authmw "todo/internal/middleware"
+	"todo/internal/notify"
 	"todo/internal/prefs"
 	"todo/internal/push"
 	"todo/internal/session"
@@ -126,6 +127,7 @@ type App struct {
 	Mail            mail.Config
 	PublicURL       string
 	SupportEmail    string
+	Notify          *notify.Telegram // nil-safe; no-op unless configured
 	AndroidPackage  string
 	AndroidSHA256   string // comma-separated
 	RegLimiter      *authmw.LoginLimiter

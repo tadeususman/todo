@@ -22,6 +22,7 @@
     <li><b>Preferensi:</b> tema, font, dan ukuran teks.</li>
     <li><b>Sesi:</b> satu cookie sesi (<code>todo_session</code>) agar tetap masuk selama 30 hari, dan cookie pesan singkat yang hilang dalam semenit.</li>
     <li><b>Notifikasi:</b> jika kamu mengaktifkan notifikasi, perangkatmu mendaftarkan alamat push (endpoint dan kunci) ke server. Alamat ini hanya dipakai untuk mengirim pengingat tugas, dan dihapus saat notifikasi dimatikan atau akun dihapus.</li>
+    <li><b>Mode coba:</b> tombol "Coba dulu tanpa daftar" membuat akun tamu sementara tanpa email dan password. Task dan chat di akun tamu dihapus otomatis setelah 24 jam. Jika kamu mendaftar dari mode coba, data tamu ikut dipindah ke akunmu.</li>
     <li><b>Log keamanan:</b> catatan login (berhasil dan gagal), perubahan password, serta tindakan admin, lengkap dengan alamat IP dan waktu. Disimpan hingga 365 hari.</li>
   </ul>
 
@@ -31,7 +32,8 @@
   <h2>Pihak ketiga</h2>
   <ul>
     <li>Jika kamu memilih font selain bawaan sistem, browsermu mengunduhnya dari Google Fonts, sehingga Google melihat alamat IP-mu.</li>
-    <li>Jika fitur lupa password aktif, email reset dikirim lewat server SMTP yang dikonfigurasi pengelola.</li>
+    {{if .NotifyOn}}<li>Saat ada pendaftar baru, pengelola menerima pemberitahuan lewat Telegram yang berisi username dan email pendaftar.</li>
+    {{end}}<li>Jika fitur lupa password aktif, email reset dikirim lewat server SMTP yang dikonfigurasi pengelola.</li>
   </ul>
 
   <h2>Siapa yang bisa melihat datamu</h2>

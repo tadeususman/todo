@@ -16,6 +16,8 @@ type Config struct {
 	SMTPHost, SMTPPort string
 	SMTPUser, SMTPPass string
 	SMTPFrom           string
+	TelegramBotToken   string // optional: admin alerts (new sign-ups)
+	TelegramChatID     string
 	SupportEmail       string // contact shown on the public privacy / delete-account pages
 	AndroidPackage     string // Play Store package name for /.well-known/assetlinks.json
 	AndroidSHA256      string // comma-separated SHA-256 signing-cert fingerprints
@@ -45,6 +47,8 @@ func Load() Config {
 		SMTPPass:           os.Getenv("SMTP_PASS"),
 		SMTPFrom:           os.Getenv("SMTP_FROM"),
 		SupportEmail:       os.Getenv("SUPPORT_EMAIL"),
+		TelegramBotToken:   os.Getenv("TELEGRAM_BOT_TOKEN"),
+		TelegramChatID:     os.Getenv("TELEGRAM_CHAT_ID"),
 		AndroidPackage:     os.Getenv("ANDROID_PACKAGE"),
 		AndroidSHA256:      os.Getenv("ANDROID_SHA256"),
 		AILogRetentionDays: getEnvInt("AI_LOG_RETENTION_DAYS", 30),

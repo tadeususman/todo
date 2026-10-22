@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	authmw "todo/internal/middleware"
@@ -76,6 +77,7 @@ func (a *App) AccountClaim(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.audit(r, uid, "guest_claim", "")
+	a.notifySignup(r, "tamu mendaftar dari mode coba", r.FormValue("username"), r.FormValue("email"))
 	a.Sessions.Destroy(w, r)
 	a.render(w, r, "register_done.html", map[string]any{"Claimed": true})
 }
@@ -107,4 +109,13 @@ func (a *App) parseTask(ctx context.Context, r *http.Request, uid int64, input s
 		return nil, errGuestAIFull
 	}
 	return a.LLM.ParseTask(ctx, input, projectNames)
+}
+
+// notifySignup tells the admin on Telegram that an account now waits for approval.
+func (a *App) notifySignup(r *http.Request, title, username, email string) {
+	if !a.Notify.Enabled() {
+		return
+	}
+	a.Notify.Send(fmt.Sprintf("todo: %s\n%s (%s)\nMenunggu tindakan admin: %d\nBuka Setting → Kelola user untuk memproses.",
+		title, strings.TrimSpace(username), strings.ToLower(strings.TrimSpace(email)), user.PendingCount(r.Context(), a.DB)))
 }

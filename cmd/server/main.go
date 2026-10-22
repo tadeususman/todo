@@ -23,6 +23,7 @@ import (
 	"todo/internal/llm"
 	"todo/internal/mail"
 	authmw "todo/internal/middleware"
+	"todo/internal/notify"
 	"todo/internal/prefs"
 	"todo/internal/project"
 	"todo/internal/push"
@@ -116,6 +117,7 @@ func main() {
 		Mail:            mail.Config{Host: cfg.SMTPHost, Port: cfg.SMTPPort, User: cfg.SMTPUser, Pass: cfg.SMTPPass, From: cfg.SMTPFrom},
 		PublicURL:       cfg.PublicURL,
 		SupportEmail:    cfg.SupportEmail,
+		Notify:          notify.New(cfg.TelegramBotToken, cfg.TelegramChatID),
 		AndroidPackage:  cfg.AndroidPackage,
 		AndroidSHA256:   cfg.AndroidSHA256,
 		RegLimiter:      authmw.NewLoginLimiter(5, time.Hour),
